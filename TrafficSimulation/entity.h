@@ -151,6 +151,8 @@ struct Junction : public Entity
 
 struct Pavement : public Entity
 {
+	bool is_occupied = false;
+
 	void init(int id, int x, int y, Grid *grid, VirtualGrid *v_grid, Camera *cam);
 	std::vector<int> get_required_adjacent_indices(VirtualGrid *v_grid);
 };

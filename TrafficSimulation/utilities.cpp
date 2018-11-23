@@ -338,7 +338,7 @@ void update_current_stand_for_bus(Entity *bus_en, const std::vector<Entity*> &bu
 
 	((Bus*)(bus_en))->current_bus_stand = nullptr;
 	for(unsigned int i = 0; i < bus_stands.size(); i++) {
-		Entity *pave_en = get_entity_next_to_type_with_id(bus_stands[i]->id, EntityType::PAVEMENT, gp);
+		Entity *pave_en = get_pavement_next_to_road_with_bst_id(bus_stands[i]->id, gp);
 		int tmp_in = get_occ_index_attached_to_pavement(pave_en, gp, v_grid);
 		if(index == tmp_in) {
 			((Bus*)(bus_en))->current_bus_stand = bus_stands[i];

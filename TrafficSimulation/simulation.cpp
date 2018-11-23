@@ -271,8 +271,8 @@ void run(Simulation *sim)
 		update_current_stand_for_bus(tmp_en, sim->bus_stands, sim->gp, sim->v_grid);
 
 		/*
-		if( ((Bus*)(tmp_en))->current_bus_stand) {
-			std::cout << "bus_stand_id: " << ((Bus*)(tmp_en))->current_bus_stand->id << std::endl;
+		if (((Bus*)(tmp_en))->current_bus_stand) {
+			std::cout << "bus_stand_id for bus : " << tmp_en->id << " is: " << ((Bus*)(tmp_en))->current_bus_stand->id << std::endl;
 		}
 		*/
 	}
@@ -325,13 +325,15 @@ void run(Simulation *sim)
 		else // Person is travelling
 		{
 			Bus *current_bus_en = (Bus*)(get_bus_with_id(current_person->current_bus_id, sim));
-			if (current_bus_en && current_bus_en->current_bus_stand->id == current_person->des_bus_stand_id)
+			if (current_bus_en && current_bus_en->current_bus_stand &&
+				current_bus_en->current_bus_stand->id == current_person->des_bus_stand_id)
 			{
-				std::cout << "Person with id: " << current_person->id << "has reached destination." << std::endl;
+				std::cout << "Person with id: " << current_person->id << " has reached destination." << std::endl;
 				current_person->is_travelling = false;
 				current_person->current_bus_stand_id = current_bus_en->current_bus_stand->id;
 				current_person->current_bus_id = -1;
 				current_person->has_reached_des = true;
+				current_person->des_bus_stand_id = -1; // So that they don't keep travelling
 			}
 		}
 	}
@@ -339,17 +341,17 @@ void run(Simulation *sim)
 
 void update_has_crossed_junc(Simulation *sim, Entity *junc_en, Entity* tmp_en)
 {
-	if(junc_en)
+	if (junc_en)
 	{
 		bool should_set_to_false = true;
-		for(unsigned int i = 0; i < junc_en->occupied_indices.size(); i++)
+		for (unsigned int i = 0; i < junc_en->occupied_indices.size(); i++)
 		{
-			if(tmp_en->occupied_indices[0] == junc_en->occupied_indices[i])
+			if (tmp_en->occupied_indices[0] == junc_en->occupied_indices[i])
 			{
 				should_set_to_false = false;
 			}
 		}
-		if(should_set_to_false)
+		if (should_set_to_false)
 		{
 			sim->en_has_crossed_junc[tmp_en] = false;
 		}
@@ -359,12 +361,12 @@ void update_has_crossed_junc(Simulation *sim, Entity *junc_en, Entity* tmp_en)
 Entity* get_en_at_index(Simulation *sim, int in)
 {
 	// car_ens
-	for(unsigned int i = 0; i < sim->car_ens.size(); i++)
+	for (unsigned int i = 0; i < sim->car_ens.size(); i++)
 	{
 		std::vector<int> occ_indices = sim->car_ens[i]->occupied_indices;
-		for(unsigned int j = 0; j < occ_indices.size(); j++)
+		for (unsigned int j = 0; j < occ_indices.size(); j++)
 		{
-			if(occ_indices[j] == in)
+			if (occ_indices[j] == in)
 			{
 				return sim->car_ens[i];
 			}
@@ -372,12 +374,12 @@ Entity* get_en_at_index(Simulation *sim, int in)
 	}
 
 	// also check for bus_ens
-	for(unsigned int i = 0; i < sim->bus_ens.size(); i++)
+	for (unsigned int i = 0; i < sim->bus_ens.size(); i++)
 	{
 		std::vector<int> occ_indices = sim->bus_ens[i]->occupied_indices;
-		for(unsigned int j = 0; j < occ_indices.size(); j++)
+		for (unsigned int j = 0; j < occ_indices.size(); j++)
 		{
-			if(occ_indices[j] == in)
+			if (occ_indices[j] == in)
 			{
 				return sim->bus_ens[i];
 			}
@@ -391,12 +393,12 @@ Entity* get_traffic_signal_at_index(Simulation *sim, int in)
 {
 	Entity *tmp_en = nullptr;
 
-	for(unsigned int i = 0; i < sim->traffic_signal_ens.size(); i++)
+	for (unsigned int i = 0; i < sim->traffic_signal_ens.size(); i++)
 	{
 		Entity *to_check_en = sim->traffic_signal_ens[i];
 		Entity *at_en = sim->e_sys->get_entity_at_index(in);
 
-		if(at_en && to_check_en->id == at_en->id)
+		if (at_en && to_check_en->id == at_en->id)
 		{
 			tmp_en = to_check_en;
 			break;
@@ -411,9 +413,9 @@ Entity* get_bus_stand_with_id(int id, Simulation *sim)
 	Entity* tmp_bus_stand = nullptr;
 	std::vector<Entity*> bus_stands = sim->bus_stands;
 
-	for(unsigned int i = 0; i < bus_stands.size(); i++)
+	for (unsigned int i = 0; i < bus_stands.size(); i++)
 	{
-		if(bus_stands[i]->id == id)
+		if (bus_stands[i]->id == id)
 		{
 			tmp_bus_stand = bus_stands[i];
 			break;
