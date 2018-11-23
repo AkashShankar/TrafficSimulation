@@ -315,6 +315,11 @@ void run(Simulation *sim)
 							current_person->current_bus_stand_id = -1;
 							current_person->current_bus_id = current_bus->id;
 							is_eligible = true;
+
+							// Get the pavement the person was in and set its->is_occupied = false;
+							Pavement *pave_en =
+								(Pavement*)(get_pavement_next_to_road_with_bst_id(current_bus->current_bus_stand->id, sim->gp));
+							pave_en->is_occupied = false;
 						}
 					}
 				}
@@ -334,6 +339,28 @@ void run(Simulation *sim)
 				current_person->current_bus_id = -1;
 				current_person->has_reached_des = true;
 				current_person->des_bus_stand_id = -1; // So that they don't keep travelling
+
+				// Updating the person's new position
+				Pavement *tmp_pv = (Pavement*)(get_entity_next_to_type_with_id(current_bus_en->current_bus_stand->id,
+					EntityType::PAVEMENT, sim->gp));
+				std::vector<Entity*> all_pave_rc;
+				std::vector<int> tmp_vtd;
+				get_all_pavements_rc(all_pave_rc, tmp_pv, sim->gp, tmp_vtd);
+				all_pave_rc.push_back(tmp_pv); // because start_en gets ignored
+
+				for (unsigned int x = 0; x < all_pave_rc.size(); x++)
+				{
+					Pavement *tmp_pave = (Pavement*)(sim->e_sys->get_en_with_id(all_pave_rc[x]->id));
+					if (tmp_pave->is_occupied == false)
+					{
+						// Setting the person's pos and occupied_index to this pavement
+						current_person->pos.x = tmp_pave->pos.x;
+						current_person->pos.y = tmp_pave->pos.y;
+						current_person->occupied_indices[0] = tmp_pave->occupied_indices[0];
+						tmp_pave->is_occupied = true;
+						break;
+					}
+				}
 			}
 		}
 	}

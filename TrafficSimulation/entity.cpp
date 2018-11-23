@@ -428,6 +428,7 @@ void EntitySystem::add_entity(EntityType type, int x, int y, Grid *grid, Virtual
 			tmp_en = new Person;
 			int tmp_img_index = rn->get_random_number(0, 19);
 			((Person*)(tmp_en))->image_index = tmp_img_index;
+			((Pavement*)(at_en))->is_occupied = true;
 		}
 	}
 

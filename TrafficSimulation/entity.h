@@ -131,7 +131,6 @@ struct Road : public Entity
 {
 	void init(int id, int x, int y, Grid *grid, VirtualGrid *v_grid, Camera *cam);
 	std::vector<int> get_required_adjacent_indices(VirtualGrid *v_grid);
-	Direction get_index_direction(int index);
 	void connect_en(Entity *to_en);
 };
 
