@@ -36,11 +36,8 @@ Query query;
 std::vector<Display *> all_displays;
 Utils utils;
 Simulation sim;
-
 bool return_pressed = false;
 
-void main_render_func();
-void editor_render_func();
 int simulation_run(void *ptr);
 
 int main(int argc, char **argv)

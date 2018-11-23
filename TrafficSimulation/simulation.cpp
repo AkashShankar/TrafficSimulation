@@ -47,6 +47,8 @@ void init(Simulation *sim)
 			sim->bus_ens.push_back(tmp_en);
 		else if(current_type == EntityType::BUS_STAND)
 			sim->bus_stands.push_back(tmp_en);
+		else if(current_type == EntityType::PERSON)
+			sim->people.push_back(tmp_en);
 	}
 
 	sim->gp->src_clicked = true;
@@ -216,12 +218,10 @@ void run(Simulation *sim)
 			}
 		}
 
-		if(is_in) {
+		if(is_in) 
 			tmp_bst.record_time = sim->time_elapsed;
-		}
-		else {
+		else 
 			tmp_bst.record_time = 0;
-		}
 
 		sim->bus_paths[tmp_en] = tmp_bst;
 
@@ -264,13 +264,9 @@ void run(Simulation *sim)
 		}
 
 		if(has_reached && current_index < tmp_vec.size())
-		{
 			sim->bus_current_path_index[tmp_en] = ++current_index;
-		}
 		else if(current_index == tmp_vec.size() - 1)
-		{
 			sim->bus_current_path_index[tmp_en] = 0;
-		}
 
 		update_current_stand_for_bus(tmp_en, sim->bus_stands, sim->gp, sim->v_grid);
 
@@ -279,6 +275,65 @@ void run(Simulation *sim)
 			std::cout << "bus_stand_id: " << ((Bus*)(tmp_en))->current_bus_stand->id << std::endl;
 		}
 		*/
+	}
+
+	/*	Transporting people 
+		For every person check all the busses, if any bus'es current_bus_stand->id matches
+		with the person's current_bus_stand->id then:
+		Check if the bus'es->id matched any of the person's->bordable_bus_id, If Yes then:
+			* Set person->is_travelling = true;
+			* Set person->current_bus_stand->id = -1;
+			* Set person->current_bus_id = current_bus'es->id;
+		To Check if person has reached destination:
+			if person->is_travelling:
+				Get the current_bus entity from person's->current_bus_id;
+				check if current_bus_en->current_bus_stand == person's->des_bus_stand_id, if Yes then:
+					* TMP: PUT SOME MSG TO THE CONSOLE
+					* Set person->is_travelling = false;
+					* Set person->current_bus_stand->id to current_bus_en->current_bus_stand->id;
+					* Set person->current_bus_id = -1;
+	*/
+
+	for (unsigned int i = 0; i < sim->people.size(); i++)
+	{
+		Person *current_person = ((Person*)(sim->people[i]));
+		if (!current_person->is_travelling && !current_person->has_reached_des)
+		{
+			bool is_eligible = false;
+			for (unsigned int j = 0; j < sim->bus_ens.size(); j++)
+			{
+				Bus *current_bus = ((Bus*)(sim->bus_ens[j]));
+				if (current_bus->current_bus_stand
+					&& current_bus->current_bus_stand->id == current_person->current_bus_stand_id)
+				{
+					std::vector<int> bordable_busses_ids = current_person->bordable_bus_ids;
+					for (unsigned int x = 0; x < bordable_busses_ids.size(); x++)
+					{
+						if (current_bus->id == bordable_busses_ids[x])
+						{
+							current_person->is_travelling = true;
+							current_person->current_bus_stand_id = -1;
+							current_person->current_bus_id = current_bus->id;
+							is_eligible = true;
+						}
+					}
+				}
+				if (is_eligible)
+					break;
+			}
+		}
+		else // Person is travelling
+		{
+			Bus *current_bus_en = (Bus*)(get_bus_with_id(current_person->current_bus_id, sim));
+			if (current_bus_en && current_bus_en->current_bus_stand->id == current_person->des_bus_stand_id)
+			{
+				std::cout << "Person with id: " << current_person->id << "has reached destination." << std::endl;
+				current_person->is_travelling = false;
+				current_person->current_bus_stand_id = current_bus_en->current_bus_stand->id;
+				current_person->current_bus_id = -1;
+				current_person->has_reached_des = true;
+			}
+		}
 	}
 }
 
@@ -353,14 +408,31 @@ Entity* get_traffic_signal_at_index(Simulation *sim, int in)
 
 Entity* get_bus_stand_with_id(int id, Simulation *sim)
 {
-	Entity* tmp_bus = nullptr;
+	Entity* tmp_bus_stand = nullptr;
 	std::vector<Entity*> bus_stands = sim->bus_stands;
 
 	for(unsigned int i = 0; i < bus_stands.size(); i++)
 	{
 		if(bus_stands[i]->id == id)
 		{
-			tmp_bus = bus_stands[i];
+			tmp_bus_stand = bus_stands[i];
+			break;
+		}
+	}
+
+	return tmp_bus_stand;
+}
+
+Entity* get_bus_with_id(int id, Simulation *sim)
+{
+	Entity *tmp_bus = nullptr;
+	std::vector<Entity*> busses = sim->bus_ens;
+
+	for (unsigned int i = 0; i < busses.size(); i++)
+	{
+		if (busses[i]->id == id)
+		{
+			tmp_bus = busses[i];
 			break;
 		}
 	}

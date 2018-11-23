@@ -175,6 +175,9 @@ struct Person: public Entity
 	int current_bus_stand_id = -1;
 	int des_bus_stand_id = -1;
 	std::vector<int> bordable_bus_ids;
+	bool is_travelling = false;
+	int current_bus_id = -1;
+	bool has_reached_des = false;
 
 	/* bool is_male = false;
 	 */

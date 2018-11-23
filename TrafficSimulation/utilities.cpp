@@ -600,19 +600,28 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 
 		else if(nm_ens[i]->type == EntityType::PERSON)
 		{
-			int tmp_image_index = ((Person*)(nm_ens[i]))->image_index;
+			Person *tmp_person = (Person*)(nm_ens[i]);
+
+			int tmp_image_index = tmp_person->image_index;
 			write.write((char*)(&tmp_image_index), sizeof(int));
 
-			int tmp_bus_stand_id = ((Person*)(nm_ens[i]))->current_bus_stand_id;
+			int tmp_bus_stand_id = tmp_person->current_bus_stand_id;
 			write.write((char*)(&tmp_bus_stand_id), sizeof(int));
 
-			int tmp_des_bus_stand_id = ((Person*)(nm_ens[i]))->des_bus_stand_id;
+			int tmp_des_bus_stand_id = tmp_person->des_bus_stand_id;
 			write.write((char*)(&tmp_des_bus_stand_id), sizeof(int));
+
+			std::vector<int> tmp_bordable_bus_ids = tmp_person->bordable_bus_ids;
+			int tmp_num_bordable_bus_ids = tmp_bordable_bus_ids.size();
+
+			write.write((char*)(&tmp_num_bordable_bus_ids), sizeof(int));
+			for (unsigned int x = 0; x < tmp_bordable_bus_ids.size(); x++)
+				write.write((char*)(&tmp_bordable_bus_ids[x]), sizeof(int));
 		}
 	}
 
 	// movable entities
-	for(unsigned int i = 0; i < m_ens.size(); i++)
+	for (unsigned int i = 0; i < m_ens.size(); i++)
 	{
 		// id
 		int tmp_id = m_ens[i]->id;
@@ -631,7 +640,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 		// type
 		write.write((char*)(&m_ens[i]->type), sizeof(EntityType));
 
-		if(m_ens[i]->type == EntityType::CAR)
+		if (m_ens[i]->type == EntityType::CAR)
 		{
 			// src_index
 			int tmp_src_index = ((Car*)(m_ens[i]))->src_index;
@@ -646,7 +655,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 			write.write((char*)(&tmp_car_image_index), sizeof(int));
 		}
 
-		else if(m_ens[i]->type == EntityType::BUS)
+		else if (m_ens[i]->type == EntityType::BUS)
 		{
 			// Number of bus_stands
 			int num_busstands = ((Bus*)(m_ens[i]))->bus_stands.size();
@@ -654,7 +663,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 
 			// bus_stands
 			std::vector<int> tmp_vec = ((Bus*)(m_ens[i]))->bus_stands;
-			for(unsigned int x = 0; x < tmp_vec.size(); x++)
+			for (unsigned int x = 0; x < tmp_vec.size(); x++)
 			{
 				int tmp_val = tmp_vec[x];
 				write.write((char*)(&tmp_val), sizeof(int));
@@ -713,6 +722,7 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 		int tmp_image_index = -1;
 		int tmp_ps_bus_stand_id = -1;
 		int tmp_ps_des_bus_stand_id = -1;
+		std::vector<int> tmp_bordable_bus_ids;
 
 		read.read((char *)(&tmp_id), sizeof(int));
 		read.read((char *)(&tmp_occupied_v_grid_index), sizeof(int));
@@ -720,25 +730,25 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 		read.read((char *)(&angle), sizeof(Angle));
 		read.read((char *)(&type), sizeof(EntityType));
 
-		if(type == EntityType::CAR)
+		if (type == EntityType::CAR)
 		{
 			read.read((char *)(&tmp_src_index), sizeof(int));
 			read.read((char *)(&tmp_des_index), sizeof(int));
 			read.read((char *)(&tmp_vehicle_image_index), sizeof(int));
 		}
-		else if(type == EntityType::BUS)
+		else if (type == EntityType::BUS)
 		{
 			int tmp_num_busstands = -1;
 			read.read((char *)(&tmp_num_busstands), sizeof(int));
 
-			for(int x = 0; x < tmp_num_busstands; x++)
+			for (int x = 0; x < tmp_num_busstands; x++)
 			{
 				int tmp_bus_stand_id = -1;
 				read.read((char *)(&tmp_bus_stand_id), sizeof(int));
 				tmp_busstands.push_back(tmp_bus_stand_id);
 			}
 		}
-		else if(type == EntityType::TRAFFIC_LIGHT)
+		else if (type == EntityType::TRAFFIC_LIGHT)
 		{
 			read.read((char *)(&tmp_tl_delay_time), sizeof(int));
 			read.read((char *)(&tmp_tl_pos_x), sizeof(int));
@@ -746,11 +756,20 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 			read.read((char *)(&tmp_junc_id), sizeof(int));
 		}
 
-		else if(type == EntityType::PERSON)
+		else if (type == EntityType::PERSON)
 		{
 			read.read((char *)(&tmp_image_index), sizeof(int));
 			read.read((char *)(&tmp_ps_bus_stand_id), sizeof(int));
 			read.read((char *)(&tmp_ps_des_bus_stand_id), sizeof(int));
+
+			unsigned int tmp_num_bus_ids = 0;
+			read.read((char *)(&tmp_num_bus_ids), sizeof(int));
+			for (unsigned int x = 0; x < tmp_num_bus_ids; x++)
+			{
+				int tmp_id = -1;
+				read.read((char *)(&tmp_id), sizeof(int));
+				tmp_bordable_bus_ids.push_back(tmp_id);
+			}
 		}
 
 		SDL_Point tmp_pos = v_grid->get_pos_from_index(tmp_occupied_v_grid_index);
@@ -758,7 +777,7 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 		// Has to be done before bounding the position to grid dims
 		int bef_bound_x = tmp_pos.x;
 		int bef_bound_y = tmp_pos.y;
-		if(type == EntityType::TRAFFIC_LIGHT)
+		if (type == EntityType::TRAFFIC_LIGHT)
 		{
 			bef_bound_x = tmp_tl_pos_x;
 			bef_bound_y = tmp_tl_pos_y;
@@ -767,7 +786,7 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 
 		tmp_pos = v_grid->bound_pos_to_grid_dims(grid, tmp_pos.x + 2, tmp_pos.y + 2);
 
-		if(type == EntityType::TRAFFIC_LIGHT)
+		if (type == EntityType::TRAFFIC_LIGHT)
 			en_sys->load_entity(type, tmp_pos.x - grid->per_width / 2, tmp_pos.y - grid->per_height / 2, grid, v_grid, cam);
 		else
 			en_sys->load_entity(type, tmp_pos.x, tmp_pos.y, grid, v_grid, cam);
@@ -783,34 +802,32 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 		en_sys->entities[count]->angle = angle;
 		en_sys->entities[count]->is_deletable = is_del;
 
-		if(type == EntityType::CAR)
+		if (type == EntityType::CAR)
 		{
 			((Car*)(en_sys->entities[count]))->src_index = tmp_src_index;
 			((Car*)(en_sys->entities[count]))->des_index = tmp_des_index;
 			((Car*)(en_sys->entities[count]))->vehicle_image_index = tmp_vehicle_image_index;
 		}
-		else if(type == EntityType::BUS)
+		else if (type == EntityType::BUS)
 		{
 			((Bus*)(en_sys->entities[count]))->bus_stands = tmp_busstands;
 		}
-		else if(type == EntityType::TRAFFIC_LIGHT)
+		else if (type == EntityType::TRAFFIC_LIGHT)
 		{
 			((TrafficLight*)(en_sys->entities[count]))->time_delay = tmp_tl_delay_time;
 			en_sys->entities[count]->pos.x = tmp_tl_pos_x;
 			en_sys->entities[count]->pos.y = tmp_tl_pos_y;
 			((TrafficLight*)(en_sys->entities[count]))->junc_id = tmp_junc_id;
 		}
-		else if(type == EntityType::PERSON)
+		else if (type == EntityType::PERSON)
 		{
 			((Person*)(en_sys->entities[count]))->image_index = tmp_image_index;
 			((Person*)(en_sys->entities[count]))->current_bus_stand_id = tmp_ps_bus_stand_id;
 			((Person*)(en_sys->entities[count]))->des_bus_stand_id = tmp_ps_des_bus_stand_id;
-
-			std::cout << "des_bus_stand_id: " << tmp_ps_des_bus_stand_id << std::endl;
+			((Person*)(en_sys->entities[count]))->bordable_bus_ids = tmp_bordable_bus_ids;
 		}
 
 		init_en_occu_indices(en_sys->entities[count]->occ_conn, en_sys->entities[count]->occupied_indices, type, angle);
-
 		count++;
 
 		// Note: check for updates in add_entity() func in entity.cpp
@@ -839,7 +856,7 @@ bool if_connected(EntitySystem *en_sys, VirtualGrid *v_grid, Entity *e1, Entity 
 	{
 		is_con = true;
 	}
-	else if(if_junc_connected_to_junc(en_sys, e1, e2, v_grid))
+	else if (if_junc_connected_to_junc(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
@@ -859,31 +876,31 @@ bool if_connected(EntitySystem *en_sys, VirtualGrid *v_grid, Entity *e1, Entity 
 	{
 		is_con = true;
 	}
-	else if(if_recth_connected_to_road(en_sys, e1, e2, v_grid))
+	else if (if_recth_connected_to_road(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
-	else if(if_recth_connected_to_junc(en_sys, e1, e2, v_grid))
+	else if (if_recth_connected_to_junc(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
-	else if(if_recth_connected_to_road4junc(en_sys, e1, e2, v_grid))
+	else if (if_recth_connected_to_road4junc(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
-	else if(if_rectv_connected_to_road(en_sys, e1, e2, v_grid))
+	else if (if_rectv_connected_to_road(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
-	else if(if_rectv_connected_to_junc(en_sys, e1, e2, v_grid))
+	else if (if_rectv_connected_to_junc(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
-	else if(if_rectv_connected_to_road4junc(en_sys, e1, e2, v_grid))
+	else if (if_rectv_connected_to_road4junc(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
-	else if(if_busstand_connected_to_pavement(en_sys, e1, e2, v_grid))
+	else if (if_busstand_connected_to_pavement(en_sys, e1, e2, v_grid))
 	{
 		is_con = true;
 	}
@@ -939,7 +956,7 @@ bool if_road_connected_to_road4_junc(EntitySystem *e_sys, Entity *e1, Entity *e2
 	Entity *road_en = nullptr;
 	Entity *junc_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::ROAD_4_JUNC, road_en, junc_en))
+	if (!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::ROAD_4_JUNC, road_en, junc_en))
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -995,7 +1012,7 @@ bool if_junc_connected_to_road(EntitySystem *e_sys, Entity *e1, Entity *e2, Virt
 	Entity *road_en = nullptr;
 	Entity *junc_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::JUNCTION, EntityType::ROAD, junc_en, road_en))
+	if (!check_and_assign_types(e1, e2, EntityType::JUNCTION, EntityType::ROAD, junc_en, road_en))
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -1020,10 +1037,10 @@ bool if_junc_connected_to_road(EntitySystem *e_sys, Entity *e1, Entity *e2, Virt
 
 bool if_junc_connected_to_junc(EntitySystem *e_sys, Entity *e1, Entity *e2, VirtualGrid *v_grid)
 {
-	if(e1->type != EntityType::JUNCTION || e2->type != EntityType::JUNCTION)
+	if (e1->type != EntityType::JUNCTION || e2->type != EntityType::JUNCTION)
 		return false;
 
-	if(!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
+	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
 		return false;
 
 	return true;
@@ -1034,10 +1051,10 @@ bool if_busstand_connected_to_pavement(EntitySystem *e_sys, Entity *e1, Entity *
 	Entity *pavement_en = nullptr;
 	Entity *busstand_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::BUS_STAND, EntityType::PAVEMENT, busstand_en, pavement_en))
+	if (!check_and_assign_types(e1, e2, EntityType::BUS_STAND, EntityType::PAVEMENT, busstand_en, pavement_en))
 		return false;
 
-	if(!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
+	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
 		return false;
 
 	return true;
@@ -1048,7 +1065,7 @@ bool if_junc_connected_to_road4_junc(EntitySystem *e_sys, Entity *e1, Entity *e2
 	Entity *junc_en = nullptr;
 	Entity *junc_4_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::JUNCTION, EntityType::ROAD_4_JUNC, junc_en, junc_4_en))
+	if (!check_and_assign_types(e1, e2, EntityType::JUNCTION, EntityType::ROAD_4_JUNC, junc_en, junc_4_en))
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -1070,7 +1087,7 @@ bool if_road_connected_to_pavement(EntitySystem *e_sys, Entity *e1, Entity *e2, 
 	Entity *road_en = nullptr;
 	Entity *pavement_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::PAVEMENT, road_en, pavement_en))
+	if (!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::PAVEMENT, road_en, pavement_en))
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -1095,10 +1112,10 @@ bool if_recth_connected_to_road(EntitySystem *e_sys, Entity *e1, Entity *e2, Vir
 	Entity *road_en = nullptr;
 	Entity *rect_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::RECT_H, road_en, rect_en))
+	if (!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::RECT_H, road_en, rect_en))
 		return false;
 
-	if(road_en->angle == Angle::NINETY || road_en->angle == Angle::TWO_SEVENTY)
+	if (road_en->angle == Angle::NINETY || road_en->angle == Angle::TWO_SEVENTY)
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -1112,11 +1129,11 @@ bool if_recth_connected_to_junc(EntitySystem *e_sys, Entity *e1, Entity *e2, Vir
 	Entity *rect_en = nullptr;
 	Entity *junc_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::RECT_H, EntityType::JUNCTION, rect_en, junc_en))
+	if (!check_and_assign_types(e1, e2, EntityType::RECT_H, EntityType::JUNCTION, rect_en, junc_en))
 		return false;
 
 	Direction tmp_dir = get_direction_of_entities(e1, e2);
-	if(tmp_dir == Direction::LEFT || tmp_dir == Direction::RIGHT)
+	if (tmp_dir == Direction::LEFT || tmp_dir == Direction::RIGHT)
 	{
 		return false;
 	}
@@ -1132,11 +1149,11 @@ bool if_recth_connected_to_road4junc(EntitySystem *e_sys, Entity *e1, Entity *e2
 	Entity *rect_en = nullptr;
 	Entity *junc4_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::RECT_H, EntityType::ROAD_4_JUNC, rect_en, junc4_en))
+	if (!check_and_assign_types(e1, e2, EntityType::RECT_H, EntityType::ROAD_4_JUNC, rect_en, junc4_en))
 		return false;
 
 	Direction tmp_dir = get_direction_of_entities(e1, e2);
-	if(tmp_dir == Direction::LEFT || tmp_dir == Direction::RIGHT)
+	if (tmp_dir == Direction::LEFT || tmp_dir == Direction::RIGHT)
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -1150,10 +1167,10 @@ bool if_rectv_connected_to_road(EntitySystem *e_sys, Entity *e1, Entity *e2, Vir
 	Entity *road_en = nullptr;
 	Entity *rect_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::RECT_V, road_en, rect_en))
+	if (!check_and_assign_types(e1, e2, EntityType::ROAD, EntityType::RECT_V, road_en, rect_en))
 		return false;
 
-	if(road_en->angle == Angle::ZERO || road_en->angle == Angle::HUN_EIGHTY)
+	if (road_en->angle == Angle::ZERO || road_en->angle == Angle::HUN_EIGHTY)
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -1167,11 +1184,11 @@ bool if_rectv_connected_to_junc(EntitySystem *e_sys, Entity *e1, Entity *e2, Vir
 	Entity *rect_en = nullptr;
 	Entity *junc_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::RECT_V, EntityType::JUNCTION, rect_en, junc_en))
+	if (!check_and_assign_types(e1, e2, EntityType::RECT_V, EntityType::JUNCTION, rect_en, junc_en))
 		return false;
 
 	Direction tmp_dir = get_direction_of_entities(e1, e2);
-	if(tmp_dir == Direction::UP || tmp_dir == Direction::DOWN)
+	if (tmp_dir == Direction::UP || tmp_dir == Direction::DOWN)
 	{
 		return false;
 	}
@@ -1187,11 +1204,11 @@ bool if_rectv_connected_to_road4junc(EntitySystem *e_sys, Entity *e1, Entity *e2
 	Entity *rect_en = nullptr;
 	Entity *junc4_en = nullptr;
 
-	if(!check_and_assign_types(e1, e2, EntityType::RECT_V, EntityType::ROAD_4_JUNC, rect_en, junc4_en))
+	if (!check_and_assign_types(e1, e2, EntityType::RECT_V, EntityType::ROAD_4_JUNC, rect_en, junc4_en))
 		return false;
 
 	Direction tmp_dir = get_direction_of_entities(e1, e2);
-	if(tmp_dir == Direction::UP || tmp_dir == Direction::DOWN)
+	if (tmp_dir == Direction::UP || tmp_dir == Direction::DOWN)
 		return false;
 
 	if (!if_e1_surrounding_e2(e_sys, v_grid, e1, e2))
@@ -1203,7 +1220,7 @@ bool if_rectv_connected_to_road4junc(EntitySystem *e_sys, Entity *e1, Entity *e2
 bool if_angle_is_left_or_right(Angle a1, Angle a2)
 {
 	if ((a1 == Angle::NINETY || a1 == Angle::TWO_SEVENTY) &&
-			(a2 == Angle::NINETY || a2 == Angle::TWO_SEVENTY))
+		(a2 == Angle::NINETY || a2 == Angle::TWO_SEVENTY))
 		return true;
 
 	return false;
@@ -1212,7 +1229,7 @@ bool if_angle_is_left_or_right(Angle a1, Angle a2)
 bool if_angle_is_up_or_down(Angle a1, Angle a2)
 {
 	if ((a1 == Angle::ZERO || a1 == Angle::HUN_EIGHTY) &&
-			(a2 == Angle::ZERO || a2 == Angle::HUN_EIGHTY))
+		(a2 == Angle::ZERO || a2 == Angle::HUN_EIGHTY))
 		return true;
 
 	return false;
@@ -1222,8 +1239,8 @@ bool if_angle_is_up_or_down(Angle a1, Angle a2)
 */
 Direction get_direction_of_entities(Entity *source_en, Entity *des_en)
 {
-	SDL_Point source_p{source_en->pos.x + source_en->pos.w / 2, source_en->pos.y + source_en->pos.h / 2};
-	SDL_Point des_p{des_en->pos.x + des_en->pos.w / 2, des_en->pos.y + des_en->pos.h / 2};
+	SDL_Point source_p{ source_en->pos.x + source_en->pos.w / 2, source_en->pos.y + source_en->pos.h / 2 };
+	SDL_Point des_p{ des_en->pos.x + des_en->pos.w / 2, des_en->pos.y + des_en->pos.h / 2 };
 
 	Direction tmp_dir = Direction::NONE;
 	int range = 2;
@@ -1249,42 +1266,42 @@ bool if_within_range(int i1, int i2, int dev)
 	return is_within;
 }
 
-std::map<int , std::vector<int>> get_en_internal_connections(EntityType type, Angle angle)
+std::map<int, std::vector<int>> get_en_internal_connections(EntityType type, Angle angle)
 {
 	std::map<int, std::vector<int>> tmp_map;
 
-	if(type == EntityType::ROAD)
+	if (type == EntityType::ROAD)
 	{
-		if(angle == Angle::ZERO || angle == Angle::HUN_EIGHTY)
+		if (angle == Angle::ZERO || angle == Angle::HUN_EIGHTY)
 		{
-			tmp_map[2] = std::vector<int> { 0 };
-			tmp_map[1] = std::vector<int> { 3 };
+			tmp_map[2] = std::vector<int>{ 0 };
+			tmp_map[1] = std::vector<int>{ 3 };
 		}
-		else if(angle == Angle::NINETY || angle == Angle::TWO_SEVENTY)
+		else if (angle == Angle::NINETY || angle == Angle::TWO_SEVENTY)
 		{
-			tmp_map[0] = std::vector<int> { 1 };
-			tmp_map[3] = std::vector<int> { 2 };
+			tmp_map[0] = std::vector<int>{ 1 };
+			tmp_map[3] = std::vector<int>{ 2 };
 		}
 	}
 
-	else if(type == EntityType::JUNCTION)
+	else if (type == EntityType::JUNCTION)
 	{
-		tmp_map[0] = std::vector<int> { 2, 1 };
-		tmp_map[1] = std::vector<int> { 0, 3 };
-		tmp_map[2] = std::vector<int> { 3, 0 };
-		tmp_map[3] = std::vector<int> { 1, 2 };
+		tmp_map[0] = std::vector<int>{ 2, 1 };
+		tmp_map[1] = std::vector<int>{ 0, 3 };
+		tmp_map[2] = std::vector<int>{ 3, 0 };
+		tmp_map[3] = std::vector<int>{ 1, 2 };
 	}
 
-	else if(type == EntityType::ROAD_4_JUNC)
+	else if (type == EntityType::ROAD_4_JUNC)
 	{
-		tmp_map[2] = std::vector<int> { 6 };
-		tmp_map[4] = std::vector<int> { 5 };
-		tmp_map[5] = std::vector<int> { 1, 6 };
-		tmp_map[6] = std::vector<int> { 7, 10 };
-		tmp_map[9] = std::vector<int> { 8, 5 };
-		tmp_map[10] = std::vector<int> { 9, 14 };
-		tmp_map[11] = std::vector<int> { 10 };
-		tmp_map[13] = std::vector<int> { 9 };
+		tmp_map[2] = std::vector<int>{ 6 };
+		tmp_map[4] = std::vector<int>{ 5 };
+		tmp_map[5] = std::vector<int>{ 1, 6 };
+		tmp_map[6] = std::vector<int>{ 7, 10 };
+		tmp_map[9] = std::vector<int>{ 8, 5 };
+		tmp_map[10] = std::vector<int>{ 9, 14 };
+		tmp_map[11] = std::vector<int>{ 10 };
+		tmp_map[13] = std::vector<int>{ 9 };
 	}
 
 	return tmp_map;
@@ -1296,13 +1313,13 @@ void init_en_occu_indices(std::map<std::map<int, int>, std::vector<int>> &oc, co
 
 	/* Note: If type is RECT_V or RECT_H, it has no internal connections
 	 * but the std::map<int, int> has to be mapped to an empty vector */
-	if(type == EntityType::RECT_H || type == EntityType::RECT_V)
+	if (type == EntityType::RECT_H || type == EntityType::RECT_V)
 	{
 		std::map<int, int> tmp_m_1, tmp_m_2;
 		tmp_m_1[0] = occupied_indices[0];
 		tmp_m_2[1] = occupied_indices[1];
-		oc[tmp_m_1] = std::vector<int> {};
-		oc[tmp_m_2] = std::vector<int> {};
+		oc[tmp_m_1] = std::vector<int>{};
+		oc[tmp_m_2] = std::vector<int>{};
 
 		return;
 	}
@@ -1310,15 +1327,15 @@ void init_en_occu_indices(std::map<std::map<int, int>, std::vector<int>> &oc, co
 	std::map<int, std::vector<int>> in_con = get_en_internal_connections(type, angle);
 	std::map<int, std::vector<int>>::iterator it = in_con.begin();
 
-	for(; it != in_con.end(); ++it)
+	for (; it != in_con.end(); ++it)
 	{
 		int current_in = it->first;
 		std::vector<int> cons = it->second;
 		std::vector<int> tmp_vec;
 		std::map<int, int> tmp_map;
 
-		for(unsigned int j = 0; j < cons.size(); j++)
-			tmp_vec.push_back(occupied_indices[cons[j]]);	
+		for (unsigned int j = 0; j < cons.size(); j++)
+			tmp_vec.push_back(occupied_indices[cons[j]]);
 
 		tmp_map[current_in] = occupied_indices[current_in];
 		oc[tmp_map] = tmp_vec;
@@ -1330,22 +1347,22 @@ void connect_both_road_and_road(Entity *e1, Entity *e2)
 	// connecting e1 with e2
 	Direction dir = get_direction_of_entities(e1, e2);
 
-	if(dir == Direction::UP)
+	if (dir == Direction::UP)
 	{
 		add_index_to_occ_conn(e1, e2, 0, 2);
 		add_index_to_occ_conn(e2, e1, 3, 1);
 	}
-	else if(dir == Direction::DOWN)
+	else if (dir == Direction::DOWN)
 	{
 		add_index_to_occ_conn(e2, e1, 0, 2);
 		add_index_to_occ_conn(e1, e2, 3, 1);
 	}
-	else if(dir == Direction::RIGHT)
+	else if (dir == Direction::RIGHT)
 	{
 		add_index_to_occ_conn(e1, e2, 1, 0);
 		add_index_to_occ_conn(e2, e1, 2, 3);
 	}
-	else if(dir == Direction::LEFT)
+	else if (dir == Direction::LEFT)
 	{
 		add_index_to_occ_conn(e2, e1, 1, 0);
 		add_index_to_occ_conn(e1, e2, 2, 3);
@@ -1364,22 +1381,22 @@ void connect_both_road_and_road4junc(Entity *e1, Entity *e2)
 {
 	Direction dir = get_direction_of_entities(e1, e2);
 
-	if(dir == Direction::DOWN) // road is down
+	if (dir == Direction::DOWN) // road is down
 	{
 		add_index_to_occ_conn(e2, e1, 0, 13);
 		add_index_to_occ_conn(e1, e2, 14, 1);
 	}
-	else if(dir == Direction::UP)
+	else if (dir == Direction::UP)
 	{
 		add_index_to_occ_conn(e1, e2, 1, 2);
 		add_index_to_occ_conn(e2, e1, 3, 2);
 	}
-	else if(dir == Direction::RIGHT)
+	else if (dir == Direction::RIGHT)
 	{
 		add_index_to_occ_conn(e1, e2, 7, 0);
 		add_index_to_occ_conn(e2, e1, 2, 11);
 	}
-	else if(dir == Direction::LEFT)
+	else if (dir == Direction::LEFT)
 	{
 		add_index_to_occ_conn(e1, e2, 8, 3);
 		add_index_to_occ_conn(e2, e1, 1, 4);
@@ -1406,22 +1423,22 @@ void connect_both_road4junc_and_road4junc(Entity *e1, Entity *e2)
 {
 	Direction dir = get_direction_of_entities(e1, e2);
 
-	if(dir == Direction::DOWN) // e2 is down
+	if (dir == Direction::DOWN) // e2 is down
 	{
 		add_index_to_occ_conn(e2, e1, 1, 13);
 		add_index_to_occ_conn(e1, e2, 14, 2);
 	}
-	else if(dir == Direction::UP) // e2 is up
+	else if (dir == Direction::UP) // e2 is up
 	{
 		add_index_to_occ_conn(e1, e2, 1, 13);
 		add_index_to_occ_conn(e2, e1, 14, 2);
 	}
-	else if(dir == Direction::RIGHT) // e2 is right
+	else if (dir == Direction::RIGHT) // e2 is right
 	{
 		add_index_to_occ_conn(e1, e2, 7, 4);
 		add_index_to_occ_conn(e2, e1, 8, 11);
 	}
-	else if(dir == Direction::LEFT) // e2 is left
+	else if (dir == Direction::LEFT) // e2 is left
 	{
 		add_index_to_occ_conn(e2, e1, 7, 4);
 		add_index_to_occ_conn(e1, e2, 8, 11);
@@ -1433,12 +1450,12 @@ void connect_both_recth_and_road(Entity *e1, Entity *e2)
 	Direction dir = get_direction_of_entities(e1, e2);
 	// e1: rect_h, e2: road
 
-	if(dir == Direction::DOWN)
+	if (dir == Direction::DOWN)
 	{
 		add_index_to_occ_conn(e2, e1, 0, 0);
 		add_index_to_occ_conn(e1, e2, 1, 1);
 	}
-	else if(dir == Direction::UP)
+	else if (dir == Direction::UP)
 	{
 		add_index_to_occ_conn(e1, e2, 0, 2);
 		add_index_to_occ_conn(e2, e1, 3, 1);
@@ -1455,12 +1472,12 @@ void connect_both_recth_and_road4junc(Entity *e1, Entity *e2)
 	Direction dir = get_direction_of_entities(e1, e2);
 	// e1: rect_h, e2: road_4_junc
 
-	if(dir == Direction::DOWN)
+	if (dir == Direction::DOWN)
 	{
 		add_index_to_occ_conn(e1, e2, 1, 2);
 		add_index_to_occ_conn(e2, e1, 1, 0);
 	}
-	else if(dir == Direction::UP)
+	else if (dir == Direction::UP)
 	{
 		add_index_to_occ_conn(e1, e2, 0, 13);
 		add_index_to_occ_conn(e2, e1, 14, 1);
@@ -1472,12 +1489,12 @@ void connect_both_rectv_and_road(Entity *e1, Entity *e2)
 	Direction dir = get_direction_of_entities(e1, e2);
 	// e1: rect_v, e2: road
 
-	if(dir == Direction::RIGHT) // road to right
+	if (dir == Direction::RIGHT) // road to right
 	{
 		add_index_to_occ_conn(e1, e2, 0, 0);
 		add_index_to_occ_conn(e2, e1, 2, 1);
 	}
-	else if(dir == Direction::LEFT) // road to left
+	else if (dir == Direction::LEFT) // road to left
 	{
 		add_index_to_occ_conn(e2, e1, 1, 0);
 		add_index_to_occ_conn(e1, e2, 1, 3);
@@ -1494,12 +1511,12 @@ void connect_both_rectv_and_road4junc(Entity *e1, Entity *e2)
 	Direction dir = get_direction_of_entities(e1, e2);
 	// e1: rect_v, e2: road_4_junc
 
-	if(dir == Direction::RIGHT) // road_4_junc is right
+	if (dir == Direction::RIGHT) // road_4_junc is right
 	{
 		add_index_to_occ_conn(e2, e1, 8, 1);
 		add_index_to_occ_conn(e1, e2, 0, 4);
 	}
-	else if(dir == Direction::LEFT) // road_4_junc is left
+	else if (dir == Direction::LEFT) // road_4_junc is left
 	{
 		add_index_to_occ_conn(e2, e1, 7, 0);
 		add_index_to_occ_conn(e1, e2, 1, 11);
@@ -1518,23 +1535,23 @@ void add_index_to_occ_conn(Entity *from_en, Entity *to_en, int from_in, int to_i
 
 	std::map<std::map<int, int>, std::vector<int>>::iterator tmp_it = from_en->occ_conn.begin();
 
-	for(; tmp_it != from_en->occ_conn.end(); ++tmp_it)
+	for (; tmp_it != from_en->occ_conn.end(); ++tmp_it)
 	{
 		std::map<int, int> in_map = tmp_it->first;
 		std::map<int, int>::iterator in_it = in_map.begin();
 
-		if(in_it->first == from_in)
+		if (in_it->first == from_in)
 		{
 			std::vector<int> tmp_vec = tmp_it->second;
 
 			// Checking if value already present
 			bool already_present = false;
-			for(unsigned int j = 0; j < tmp_vec.size(); j++)
+			for (unsigned int j = 0; j < tmp_vec.size(); j++)
 			{
-				if(tmp_vec[j] == it_2->second)
+				if (tmp_vec[j] == it_2->second)
 					already_present = true;
 			}
-			if(!already_present)
+			if (!already_present)
 			{
 				tmp_vec.push_back(it_2->second);
 				tmp_it->second = tmp_vec;
@@ -1543,11 +1560,11 @@ void add_index_to_occ_conn(Entity *from_en, Entity *to_en, int from_in, int to_i
 		}
 	}
 
-	if(tmp_it == from_en->occ_conn.end())
+	if (tmp_it == from_en->occ_conn.end())
 	{
 		std::map<int, int> tmp_map;
 		tmp_map[it_1->first] = it_1->second;
-		from_en->occ_conn[tmp_map] = std::vector<int> { it_2->second };
+		from_en->occ_conn[tmp_map] = std::vector<int>{ it_2->second };
 	}
 }
 
@@ -1559,7 +1576,7 @@ void show_all_occ_en(Entity *en)
 
 	std::cout << "en->id: " << en->id << std::endl;
 
-	for(; tmp_it != en->occ_conn.end(); ++tmp_it)
+	for (; tmp_it != en->occ_conn.end(); ++tmp_it)
 	{
 		std::map<int, int> tmp_m = tmp_it->first;
 		std::vector<int> tmp_vec = tmp_it->second;
@@ -1567,7 +1584,7 @@ void show_all_occ_en(Entity *en)
 		std::map<int, int>::iterator tmp_it_2 = tmp_m.begin();
 
 		std::cout << tmp_it_2->second << " is connected to: ";
-		for(unsigned int j = 0; j < tmp_vec.size(); j++)
+		for (unsigned int j = 0; j < tmp_vec.size(); j++)
 			std::cout << tmp_vec[j] << " ";
 		std::cout << std::endl;
 
@@ -1579,18 +1596,18 @@ void show_all_occ_en(Entity *en)
 
 bool check_and_assign_types(Entity *e1, Entity *e2, EntityType t1, EntityType t2, Entity* &a1, Entity* &a2)
 {
-	if(e1->type == t1 && e2->type == t2)
+	if (e1->type == t1 && e2->type == t2)
 	{
 		a1 = e1;
 		a2 = e2;
 	}
-	else if(e1->type == t2 && e2->type == t1)
+	else if (e1->type == t2 && e2->type == t1)
 	{
 		a1 = e2;
 		a2 = e1;
 	}
 
-	if(!a1 || !a2)
+	if (!a1 || !a2)
 		return false;
 
 	return true;
@@ -1619,21 +1636,21 @@ bool check_and_assign_types(Entity *e1, Entity *e2, EntityType t1, EntityType t2
 	}
 	}
 
-	return pave_ens;	
+	return pave_ens;
 	}
 	*/
 
 std::vector<Entity*> get_pavements_next_to_pavement(Entity *pave_en, Graph *gp)
 {
 	std::vector<Entity*> pave_ens;
-	if(pave_en && pave_en->type == EntityType::PAVEMENT)
+	if (pave_en && pave_en->type == EntityType::PAVEMENT)
 	{
-		Node *tmp_node = gp->get_node_with_id(pave_en->id);	
-		if(tmp_node)
+		Node *tmp_node = gp->get_node_with_id(pave_en->id);
+		if (tmp_node)
 		{
-			for(unsigned int i = 0; i < tmp_node->adjacent_nodes.size(); i++)
+			for (unsigned int i = 0; i < tmp_node->adjacent_nodes.size(); i++)
 			{
-				if(tmp_node->adjacent_nodes[i]->type == EntityType::PAVEMENT)
+				if (tmp_node->adjacent_nodes[i]->type == EntityType::PAVEMENT)
 					pave_ens.push_back(tmp_node->adjacent_nodes[i]);
 			}
 		}
@@ -1646,28 +1663,28 @@ void get_all_pavements_rc(std::vector<Entity*> &vec, Entity *start_en, Graph *gp
 {
 	std::vector<Entity*> tmp_vec = get_pavements_next_to_pavement(start_en, gp);
 	vtd_ids.push_back(start_en->id);
-	for(unsigned int i = 0; i < tmp_vec.size(); i++)
+	for (unsigned int i = 0; i < tmp_vec.size(); i++)
 	{
 		bool already_vtd = false;
-		for(unsigned int j = 0; j < vtd_ids.size(); j++)
+		for (unsigned int j = 0; j < vtd_ids.size(); j++)
 		{
-			if(vtd_ids[j] == tmp_vec[i]->id)
+			if (vtd_ids[j] == tmp_vec[i]->id)
 			{
 				already_vtd = true;
 				break;
 			}
 		}
-		if(!already_vtd)
+		if (!already_vtd)
 		{
 			bool value_is_in = false;
-			for(unsigned int x = 0; x < vec.size(); x++)
+			for (unsigned int x = 0; x < vec.size(); x++)
 			{
-				if(tmp_vec[i]->id == vec[x]->id)
+				if (tmp_vec[i]->id == vec[x]->id)
 				{
 					value_is_in = true;
 				}
 			}
-			if(!value_is_in)
+			if (!value_is_in)
 			{
 				vec.push_back(tmp_vec[i]);
 			}
@@ -1679,23 +1696,23 @@ void get_all_pavements_rc(std::vector<Entity*> &vec, Entity *start_en, Graph *gp
 
 void set_current_bs_to_person(Entity *ps_en, Graph *gp, EntitySystem *e_sys)
 {
-	if(!ps_en || ps_en->type != EntityType::PERSON)
+	if (!ps_en || ps_en->type != EntityType::PERSON)
 		return;
 
-	std::vector<Entity*> all_ens = e_sys->get_all_entities_at_index(ps_en->occupied_indices[0]);	
+	std::vector<Entity*> all_ens = e_sys->get_all_entities_at_index(ps_en->occupied_indices[0]);
 	Entity *start_pave_en = nullptr;
 	int bus_stand_id = -1;
 
-	for(unsigned int i = 0; i < all_ens.size(); i++)
+	for (unsigned int i = 0; i < all_ens.size(); i++)
 	{
-		if(all_ens[i]->type == EntityType::PAVEMENT)
+		if (all_ens[i]->type == EntityType::PAVEMENT)
 		{
 			start_pave_en = all_ens[i];
 			break;
 		}
 	}
 
-	if(!start_pave_en)
+	if (!start_pave_en)
 		return;
 
 	std::vector<Entity*> all_pave_ens = get_pavements_next_to_pavement(start_pave_en, gp);
@@ -1712,12 +1729,12 @@ void set_current_bs_to_person(Entity *ps_en, Graph *gp, EntitySystem *e_sys)
 		std::cout << std::endl;
 		*/
 
-	for(unsigned int i = 0; i < all_pave_ens.size(); i++)
+	for (unsigned int i = 0; i < all_pave_ens.size(); i++)
 	{
 		Node *tmp_node = gp->get_node_with_id(all_pave_ens[i]->id);
-		for(unsigned int j = 0; j < tmp_node->adjacent_nodes.size(); j++)
+		for (unsigned int j = 0; j < tmp_node->adjacent_nodes.size(); j++)
 		{
-			if(tmp_node->adjacent_nodes[j]->type == EntityType::BUS_STAND)
+			if (tmp_node->adjacent_nodes[j]->type == EntityType::BUS_STAND)
 			{
 				bus_stand_id = tmp_node->adjacent_nodes[j]->id;
 				break;

@@ -41,6 +41,7 @@ struct Simulation
 	/* Note: the bus has to wait for 2 or more seconds at each stop */
 
 	std::vector<Entity*> bus_stands;
+	std::vector<Entity*> people;
 
 	std::map<Entity*, bool> en_has_crossed_junc;
 	std::vector<Entity*> traffic_signal_ens;
@@ -53,5 +54,6 @@ Entity* get_en_at_index(Simulation *sim, int in);
 Entity* get_traffic_signal_at_index(Simulation *sim, int in);
 void update_has_crossed_junc(Simulation *sim, Entity *junc_en, Entity *tmp_en);
 Entity* get_bus_stand_with_id(int id, Simulation *sim);
+Entity* get_bus_with_id(int id, Simulation *sim);
 
 #endif
