@@ -205,6 +205,137 @@ std::vector<DB_Traffic_Light> DB_Connection::get_all_traffic_light()
 	return tmp_lights;
 }
 
+std::string DB_Connection::get_basic_str(std::string init_str, int id, EntityType type, 
+	Angle angle, int occ_index)
+{
+	std::string str = init_str;
+	str += std::to_string(id);
+	str += ", ";
+	str += get_str_from_type(type);
+	str += ", ";
+	str += get_str_from_angle(angle);
+	str += ", ";
+	str += std::to_string(occ_index);
+
+	return str;
+}
+
+void DB_Connection::create_new_reg_en(int id, EntityType type, Angle angle, int occ_index)
+{
+	std::string str = get_basic_str("insert into reg_en values(", id, type, angle, occ_index);
+	str += ");";
+
+	stmt = con->createStatement();
+	stmt->execute(str);
+	delete stmt;
+}
+
+void DB_Connection::create_new_car_en(int id, EntityType type, Angle angle, int occ_index, int speed,
+	float fuel_consumed, float miles_driven, int src_index, int des_index)
+{
+	std::string str = get_basic_str("insert into car values(", id, type, angle, occ_index);
+	str += ", ";
+	str += std::to_string(speed);
+	str += ", ";
+	str += std::to_string(fuel_consumed);
+	str += ", ";
+	str += std::to_string(miles_driven);
+	str += ", ";
+	str += std::to_string(src_index);
+	str += ", ";
+	str += std::to_string(des_index);
+
+	str += ");";
+
+	stmt = con->createStatement();
+	stmt->execute(str);
+	delete stmt;
+}
+
+void DB_Connection::create_new_traffic_light_en(int id, EntityType type, Angle angle, int occ_index,
+	int time_delay, int junc_id, int pos_x, int pos_y)
+{
+	std::string str = get_basic_str("insert into traffic_light values(", id, type, angle, occ_index);
+	str += ", ";
+	str += std::to_string(time_delay);
+	str += ", ";
+	str += std::to_string(junc_id);
+	str += ", ";
+	str += std::to_string(pos_x);
+	str += ", ";
+	str += std::to_string(pos_y);
+
+	str += ");";
+
+	stmt = con->createStatement();
+	stmt->execute(str);
+	delete stmt;
+}
+
+void DB_Connection::create_new_person_en(int id, EntityType type, Angle angle, int occ_index,
+	int image_index, int current_bst_id, int des_bst_id, float money_spent, std::vector<int> bus_ids)
+{
+	std::string str = get_basic_str("insert into person_light values(", id, type, angle, occ_index);
+	str += ", ";
+	str += std::to_string(image_index);
+	str += ", ";
+	str += std::to_string(current_bst_id);
+	str += ", ";
+	str += std::to_string(des_bst_id);
+	str += ", ";
+	str += std::to_string(money_spent);
+	str += ");";
+
+	stmt = con->createStatement();
+	stmt->execute(str);
+	delete stmt;
+
+	// adding bus_ids to person_bus_stands
+	for (unsigned int i = 0; i < bus_ids.size(); i++)
+	{
+		str = "insert into person_bus_stands values(";
+		str += std::to_string(id);
+		str += ", ";
+		str += std::to_string(bus_ids[i]);
+		str += ");";
+
+		stmt = con->createStatement();
+		stmt->execute(str);
+		delete stmt;
+	}
+}
+
+void DB_Connection::create_new_bus_en(int id, EntityType type, Angle angle, int occ_index,
+	int speed, float fuel_consumed, float miles_driven, std::vector<int> bus_stand_ids)
+{
+	std::string str = get_basic_str("insert into bus values(", id, type, angle, occ_index);
+	str += ", ";
+	str += std::to_string(speed);
+	str += ", ";
+	str += std::to_string(fuel_consumed);
+	str += ", ";
+	str += std::to_string(miles_driven);
+	str += ");";
+
+	stmt = con->createStatement();
+	stmt->execute(str);
+	delete stmt;
+
+	// adding bus_stand_ids to bus_bus_stands
+	for (unsigned int i = 0; i < bus_stand_ids.size(); i++)
+	{
+		str = "insert into bus_bus_stands values(";
+		str += std::to_string(id);
+		str += ", ";
+		str += std::to_string(bus_stand_ids[i]);
+		str += ");";
+
+		stmt = con->createStatement();
+		stmt->execute(str);
+		delete stmt;
+	}
+}
+
 void DB_Connection::destroy()
 {
 	delete con;

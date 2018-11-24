@@ -149,6 +149,35 @@ EntityType get_type_from_str(std::string str)
 	return tmp_type;
 }
 
+std::string get_str_from_type(EntityType type)
+{
+	std::string str;
+	if (type == EntityType::CAR)
+		str = "car";
+	else if (type == EntityType::ROAD)
+		str = "road";
+	else if (type == EntityType::JUNCTION)
+		str = "junction";
+	else if (type == EntityType::ROAD_4_JUNC)
+		str = "road_4_junc";
+	else if (type == EntityType::PAVEMENT)
+		str = "pavement";
+	else if (type == EntityType::PERSON)
+		str = "person";
+	else if (type == EntityType::BUS)
+		str = "bus";
+	else if (type == EntityType::TRAFFIC_LIGHT)
+		str = "traffic_light";
+	else if (type == EntityType::BUS_STAND)
+		str = "bus_stand";
+	else if (type == EntityType::RECT_H)
+		str = "rect_h";
+	else if (type == EntityType::RECT_V)
+		str = "rect_v";
+
+	return str;
+}
+
 Angle get_angle_from_str(std::string str)
 {
 	Angle tmp_angle = Angle::ZERO;
@@ -162,6 +191,21 @@ Angle get_angle_from_str(std::string str)
 		tmp_angle = Angle::TWO_SEVENTY;
 
 	return tmp_angle;
+}
+
+std::string get_str_from_angle(Angle angle)
+{
+	std::string str;
+	if (angle == Angle::ZERO)
+		str = "zero";
+	else if (angle == Angle::NINETY)
+		str = "ninety";
+	else if (angle == Angle::HUN_EIGHTY)
+		str = "hun_eighty";
+	else if (angle == Angle::TWO_SEVENTY)
+		str = "two_seventy";
+
+	return str;
 }
 
 Entity* make_entity_from_type(EntityType type)

@@ -73,6 +73,18 @@ struct DB_Connection
 	std::vector<DB_Person> get_all_person();
 	std::vector<DB_Traffic_Light> get_all_traffic_light();
 
+	void create_new_reg_en(int id, EntityType type, Angle angle, int occ_index);
+	void create_new_car_en(int id, EntityType type, Angle angle, int occ_index, int speed, 
+		float fuel_consumed, float miles_driven, int src_index, int des_index);
+	void create_new_traffic_light_en(int id, EntityType type, Angle angle, int occ_index,
+		int time_delay, int junc_id, int pos_x, int pos_y);
+	void create_new_person_en(int id, EntityType type, Angle angle, int occ_index,
+		int image_index, int current_bst_id, int des_bst_id, float money_spent, std::vector<int> bus_ids);
+	void create_new_bus_en(int id, EntityType type, Angle angle, int occ_index,
+		int speed, float fuel_consumed, float miles_driven, std::vector<int> bus_stand_ids);
+
+	std::string get_basic_str(std::string init_str, int id, EntityType type, Angle angle, int occ_index);
+
 	void init();
 	void destroy();
 };
