@@ -595,13 +595,17 @@ void print_rect(SDL_Rect *rect)
 }
 /* tmp */
 
-
 void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 {
-	/* IMP: First write the non-movable entities, because the movable entities has
-	 * to be rendered on top on the non-movable entities, otherwise it can't
-	 * be seen.
-	 */
+
+}
+
+/*
+void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
+{
+	// IMP: First write the non-movable entities, because the movable entities has
+	// to be rendered on top on the non-movable entities, otherwise it can't
+	// be seen.
 
 	std::ofstream write;
 	write.open(f_name.c_str(), std::ios::binary);
@@ -653,7 +657,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 		// type
 		write.write((char*)(&nm_ens[i]->type), sizeof(EntityType));
 
-		/* Note: include traffic_light: time_delay, pos.x, pos.y */
+		// Note: include traffic_light: time_delay, pos.x, pos.y
 		if(nm_ens[i]->type == EntityType::TRAFFIC_LIGHT)
 		{
 			int tmp_delay_time = ((TrafficLight*)(nm_ens[i]))->time_delay;
@@ -743,6 +747,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 	std::cout << "Successfully saved: " << f_name << std::endl;
 	write.close();
 }
+*/
 
 void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim)
 {

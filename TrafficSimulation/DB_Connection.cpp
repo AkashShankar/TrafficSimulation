@@ -222,7 +222,7 @@ std::string DB_Connection::get_basic_str(std::string init_str, int id, EntityTyp
 
 void DB_Connection::create_new_reg_en(int id, EntityType type, Angle angle, int occ_index)
 {
-	std::string str = get_basic_str("insert into reg_en values(", id, type, angle, occ_index);
+	std::string str = get_basic_str("insert into Reg_En values(", id, type, angle, occ_index);
 	str += ");";
 
 	stmt = con->createStatement();
@@ -233,7 +233,7 @@ void DB_Connection::create_new_reg_en(int id, EntityType type, Angle angle, int 
 void DB_Connection::create_new_car_en(int id, EntityType type, Angle angle, int occ_index, int speed,
 	float fuel_consumed, float miles_driven, int src_index, int des_index)
 {
-	std::string str = get_basic_str("insert into car values(", id, type, angle, occ_index);
+	std::string str = get_basic_str("insert into Car values(", id, type, angle, occ_index);
 	str += ", ";
 	str += std::to_string(speed);
 	str += ", ";
@@ -255,7 +255,7 @@ void DB_Connection::create_new_car_en(int id, EntityType type, Angle angle, int 
 void DB_Connection::create_new_traffic_light_en(int id, EntityType type, Angle angle, int occ_index,
 	int time_delay, int junc_id, int pos_x, int pos_y)
 {
-	std::string str = get_basic_str("insert into traffic_light values(", id, type, angle, occ_index);
+	std::string str = get_basic_str("insert into TrafficLight values(", id, type, angle, occ_index);
 	str += ", ";
 	str += std::to_string(time_delay);
 	str += ", ";
@@ -275,7 +275,7 @@ void DB_Connection::create_new_traffic_light_en(int id, EntityType type, Angle a
 void DB_Connection::create_new_person_en(int id, EntityType type, Angle angle, int occ_index,
 	int image_index, int current_bst_id, int des_bst_id, float money_spent, std::vector<int> bus_ids)
 {
-	std::string str = get_basic_str("insert into person_light values(", id, type, angle, occ_index);
+	std::string str = get_basic_str("insert into Person values(", id, type, angle, occ_index);
 	str += ", ";
 	str += std::to_string(image_index);
 	str += ", ";
@@ -334,6 +334,33 @@ void DB_Connection::create_new_bus_en(int id, EntityType type, Angle angle, int 
 		stmt->execute(str);
 		delete stmt;
 	}
+}
+
+void DB_Connection::truncate_all()
+{
+	execute_stmt("truncate reg_en;");
+	execute_stmt("truncate car;");
+	execute_stmt("drop table person_bus_stands;");
+	execute_stmt("drop table bus_bus_stands;");
+	execute_stmt("truncate bus;");
+	execute_stmt("truncate person;");
+	execute_stmt("truncate trafficlight;");
+	execute_stmt("truncate busstand;");
+
+	execute_stmt("create table bus_bus_stands(bus_id int, bus_stand_id int);");
+	execute_stmt("alter table bus_bus_stands add foreign key(bus_id) references bus(id);");
+	execute_stmt("alter table bus_bus_stands add foreign key(bus_stand_id) references busstand(id);");
+
+	execute_stmt("create table person_bus_stands(person_id int, bus_stand_id int);");
+	execute_stmt("alter table person_bus_stands add foreign key(person_id) references bus(id);");
+	execute_stmt("alter table person_bus_stands add foreign key(bus_stand_id) references busstand(id);");
+}
+
+void DB_Connection::execute_stmt(std::string str)
+{
+	stmt = con->createStatement();
+	stmt->execute(str);
+	delete stmt;
 }
 
 void DB_Connection::destroy()

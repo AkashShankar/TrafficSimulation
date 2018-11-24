@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
 	db_con.init();
 	/* tmp */
-	db_con.create_new_reg_en(0, EntityType::PERSON, Angle::TWO_SEVENTY, 320);
+	db_con.truncate_all();
 	/* tmp */
 
 	sim.e_sys = &en_sys;
