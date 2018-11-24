@@ -50,7 +50,7 @@ struct Query
 
 	void highlight_accordingly(SDL_Renderer *ren);
 
-	private:
+private:
 	QueryType current_query_type = QueryType::NONE;
 	std::vector<std::string> words;
 

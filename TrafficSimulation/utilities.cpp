@@ -575,7 +575,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 		int tmp_index = nm_ens[i]->occupied_indices[0];
 		write.write((char*)(&tmp_index), sizeof(int));
 
-		// is_del
+		// is_del @NotSure
 		write.write((char*)(&nm_ens[i]->is_deletable), sizeof(bool));
 
 		// angle

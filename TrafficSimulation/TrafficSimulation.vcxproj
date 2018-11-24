@@ -164,6 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="DB_Connection.h" />
     <ClInclude Include="display.h" />
     <ClInclude Include="editor.h" />
     <ClInclude Include="entity.h" />
@@ -182,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="DB_Connection.cpp" />
     <ClCompile Include="display.cpp" />
     <ClCompile Include="editor.cpp" />
     <ClCompile Include="entity.cpp" />

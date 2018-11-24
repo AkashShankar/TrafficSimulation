@@ -89,8 +89,6 @@ bool if_rectv_connected_to_road4junc(EntitySystem *e_sys, Entity *e1, Entity *e2
 
 bool if_road_connected_to_pavement(EntitySystem *e_sys, Entity *e1, Entity *e2, VirtualGrid *v_grid);
 bool if_pavement_connected_to_pavement(EntitySystem *e_sys, Entity *e1, Entity *e2, VirtualGrid *v_grid);
-bool if_pavement_connected_to_junc(EntitySystem *e_sys, Entity *e1, Entity *e2, VirtualGrid *v_grid);
-bool if_pavement_connected_to_road4_junc(EntitySystem *e_sys, Entity *e1, Entity *e2, VirtualGrid *v_grid);
 
 Direction get_direction_of_entities(Entity *source_en, Entity *des_en);
 bool if_within_range(int i1, int i2, int dev);
