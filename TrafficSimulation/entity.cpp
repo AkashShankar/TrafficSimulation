@@ -233,7 +233,11 @@ void EntitySystem::draw(SDL_Renderer *ren)
 		bool is_type_traffic_light = false;
 
 		if (entities[i]->type == EntityType::CAR)
-			vector_index_1 = ((Vehicle*)(entities[i]))->vehicle_image_index;
+		{
+			bool has_reached_des = ((Car*)(entities[i]))->has_reached_des;
+			if (!has_reached_des)
+				vector_index_1 = ((Vehicle*)(entities[i]))->vehicle_image_index;
+		}
 		else if (entities[i]->type == EntityType::PERSON)
 		{
 			bool is_travelling = ((Person*)(entities[i]))->is_travelling;

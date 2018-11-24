@@ -17,13 +17,13 @@ void init(Simulation *sim)
 	 *
 	 * the function compute_shortest_path has to return a std::queue<SDL_Point>
 	 * that has the mid_point of every path_grid_index from src to des
-	 */ 
-
-	/* For now: the path will just be computed once at the start of the simulation
-	 * Later we'll update the path at regular intervals of time
 	 */
 
-	/* Call this function after the map is loaded ( load_entities() in utilities.cpp ) */
+	 /* For now: the path will just be computed once at the start of the simulation
+	  * Later we'll update the path at regular intervals of time
+	  */
+
+	  /* Call this function after the map is loaded ( load_entities() in utilities.cpp ) */
 
 	assert(sim->e_sys != nullptr);
 	assert(sim->ed != nullptr);
@@ -34,38 +34,38 @@ void init(Simulation *sim)
 	sim->gp->add_all_nodes(sim->e_sys, sim->v_grid);
 	sim->gp->compute_adjacency_matrix();
 
-	for(unsigned int i = 0; i < sim->e_sys->entities.size(); i++)
+	for (unsigned int i = 0; i < sim->e_sys->entities.size(); i++)
 	{
 		EntityType current_type = sim->e_sys->entities[i]->type;
 		Entity *tmp_en = sim->e_sys->entities[i];
 
-		if(current_type == EntityType::CAR)
+		if (current_type == EntityType::CAR)
 			sim->car_ens.push_back(tmp_en);
-		else if(current_type == EntityType::TRAFFIC_LIGHT)
+		else if (current_type == EntityType::TRAFFIC_LIGHT)
 			sim->traffic_signal_ens.push_back(tmp_en);
-		else if(current_type == EntityType::BUS)
+		else if (current_type == EntityType::BUS)
 			sim->bus_ens.push_back(tmp_en);
-		else if(current_type == EntityType::BUS_STAND)
+		else if (current_type == EntityType::BUS_STAND)
 			sim->bus_stands.push_back(tmp_en);
-		else if(current_type == EntityType::PERSON)
+		else if (current_type == EntityType::PERSON)
 			sim->people.push_back(tmp_en);
 	}
 
 	sim->gp->src_clicked = true;
 	sim->gp->des_clicked = true;
-	for(unsigned int i = 0; i < sim->car_ens.size(); i++)
+	for (unsigned int i = 0; i < sim->car_ens.size(); i++)
 	{
 		int tmp_src_index = ((Car*)(sim->car_ens[i]))->src_index;
 		int tmp_des_index = ((Car*)(sim->car_ens[i]))->des_index;
 
-		if(tmp_src_index != -1 && tmp_des_index != -1)
+		if (tmp_src_index != -1 && tmp_des_index != -1)
 		{
 			sim->gp->car_src_index = tmp_src_index;
-			sim->gp->car_des_index = tmp_des_index;	
+			sim->gp->car_des_index = tmp_des_index;
 
 			std::vector<SDL_Point> tmp_vec_path = sim->gp->compute_shortest_path_bw(sim->v_grid, sim->cam);
 
-			if(tmp_vec_path.size() >= 2) // The vehicle is initially at this position
+			if (tmp_vec_path.size() >= 2) // The vehicle is initially at this position
 				tmp_vec_path.erase(tmp_vec_path.begin());
 
 			sim->car_paths[sim->car_ens[i]] = tmp_vec_path;
@@ -95,7 +95,7 @@ void init(Simulation *sim)
 	*/
 
 	// generating bus_paths
-	for(unsigned int i = 0; i < sim->bus_ens.size(); i++)
+	for (unsigned int i = 0; i < sim->bus_ens.size(); i++)
 	{
 		Bus_Stops_Path tmp_bst = generate_bus_path(sim->bus_ens[i], sim->e_sys, sim->gp, sim->v_grid, sim->cam);
 
@@ -113,14 +113,14 @@ void run(Simulation *sim)
 	sim->time_elapsed = (double)(SDL_GetTicks()) / 1000.0f;
 	// std::cout << "time_elapsed: " << sim->time_elapsed << std::endl;
 
-	for(unsigned int i = 0; i < sim->traffic_signal_ens.size(); i++)
+	for (unsigned int i = 0; i < sim->traffic_signal_ens.size(); i++)
 	{
 		Entity *tmp_en = sim->traffic_signal_ens[i];
 		int tmp_delay_time = ((TrafficLight*)(tmp_en))->time_delay;
 		int tmp_record_time = ((TrafficLight*)(tmp_en))->record_time;
 
-		if((int)sim->time_elapsed % tmp_delay_time == 0 && 
-				(int)sim->time_elapsed != tmp_record_time)
+		if ((int)sim->time_elapsed % tmp_delay_time == 0 &&
+			(int)sim->time_elapsed != tmp_record_time)
 		{
 			tmp_en->goto_next_traffic_pattern();
 			((TrafficLight*)(tmp_en))->record_time = ((int)sim->time_elapsed);
@@ -129,27 +129,28 @@ void run(Simulation *sim)
 
 	// moving cars
 	std::map<Entity*, std::vector<SDL_Point>>::iterator it = sim->car_paths.begin();
-	for(; it != sim->car_paths.end(); ++it)
+	for (; it != sim->car_paths.end(); ++it)
 	{
 		Entity *tmp_en = it->first;
 		std::vector<SDL_Point> tmp_vec = it->second;
 		unsigned int current_index = sim->car_current_path_index[tmp_en];
 		SDL_Point to_point = tmp_vec[current_index];
 		bool has_reached = false;
+		bool has_reached_des = ((Car*)(tmp_en))->has_reached_des;
 
-		if(current_index < tmp_vec.size())
+		if (current_index < tmp_vec.size())
 		{
 			has_reached = tmp_en->move(to_point, sim->v_grid, sim->cam);
 
 			// checking if next index is empty
-			if(current_index < tmp_vec.size() - 1)
+			if (current_index < tmp_vec.size() - 1)
 			{
 				SDL_Point p_to_check = tmp_vec[current_index + 1];
 
 				int in_to_check = sim->v_grid->get_index(p_to_check.x, p_to_check.y);
 				Entity* tmp_en_2 = get_en_at_index(sim, in_to_check);
 				Entity *traffic_en = get_traffic_signal_at_index(sim, in_to_check);
-			Entity *junc_en = nullptr;
+				Entity *junc_en = nullptr;
 
 				// Check if next junction has traffic_light in it
 				// if yes, check if the car->move_direction is
@@ -157,22 +158,22 @@ void run(Simulation *sim)
 				// Once the vehicle has entered the junction
 				// the signal should'nt affect its movement
 
-				if(tmp_en_2)
+				if (tmp_en_2)
 				{
 					has_reached = false;
 				}
-				if(traffic_en && !sim->en_has_crossed_junc[tmp_en])
+				if (traffic_en && !sim->en_has_crossed_junc[tmp_en])
 				{
 					Direction d1 = ((TrafficLight*)(traffic_en))->current_arrow_direction;
 					Direction d2 = ((Car*)(tmp_en))->current_move_direction;
 
-					if(d1 == d2)
+					if (d1 == d2)
 						sim->en_has_crossed_junc[tmp_en] = true;
 					else
 						has_reached = false;
 				}
 
-				if(traffic_en)
+				if (traffic_en)
 				{
 					int tmp_junc_id = ((TrafficLight*)(traffic_en))->junc_id;
 					junc_en = sim->e_sys->get_en_with_id(tmp_junc_id);
@@ -180,10 +181,24 @@ void run(Simulation *sim)
 				}
 			}
 		}
+		else if(!has_reached_des)
+		{
+			((Car*)(tmp_en))->has_reached_des = true;
+			tmp_en->occupied_indices[0] = -1;
+			sim->v_grid->set_to_empty(tmp_en->pos.x + 5, tmp_en->pos.y + 5,
+				tmp_en->num_rows_cols.x, tmp_en->num_rows_cols.y);
+			std::cout << "Car with id: " << tmp_en->id << " has reached destination. Miles driven: "
+				<< ((Vehicle*)(tmp_en))->miles_driven << " fuel: " << ((Vehicle*)(tmp_en))->fuel_consumed
+				<< std::endl;
+		}
 
-		if(has_reached && current_index < tmp_vec.size())
+		if (has_reached && current_index < tmp_vec.size())
 		{
 			sim->car_current_path_index[tmp_en] = ++current_index;
+
+			// Increasing miles_driven by 0.1f;
+			((Vehicle*)(tmp_en))->miles_driven += 0.1f;
+			((Vehicle*)(tmp_en))->fuel_consumed += 0.05f;
 		}
 	}
 
@@ -192,7 +207,7 @@ void run(Simulation *sim)
 	// moving busses
 	// moving busses
 	std::map<Entity*, Bus_Stops_Path>::iterator bus_it = sim->bus_paths.begin();
-	for(; bus_it != sim->bus_paths.end(); ++bus_it)
+	for (; bus_it != sim->bus_paths.end(); ++bus_it)
 	{
 		Entity *tmp_en = bus_it->first;
 		Bus_Stops_Path tmp_bst = bus_it->second;
@@ -203,34 +218,34 @@ void run(Simulation *sim)
 		bool has_reached = false;
 
 		double diff = abs(sim->time_elapsed - tmp_bst.record_time);
-		if(diff < tmp_bst.stop_time) {
+		if (diff < tmp_bst.stop_time) {
 			continue;
 		}
 
 		// searching if current_index is next to any bus_stop
 		bool is_in = false;
-		for(unsigned int x = 0; x < stop_indices.size(); x++)
+		for (unsigned int x = 0; x < stop_indices.size(); x++)
 		{
-			if(tmp_en->occupied_indices[0] == stop_indices[x] && tmp_bst.current_check_index != stop_indices[x])
+			if (tmp_en->occupied_indices[0] == stop_indices[x] && tmp_bst.current_check_index != stop_indices[x])
 			{
 				tmp_bst.current_check_index = stop_indices[x];
 				is_in = true;
 			}
 		}
 
-		if(is_in) 
+		if (is_in)
 			tmp_bst.record_time = sim->time_elapsed;
-		else 
+		else
 			tmp_bst.record_time = 0;
 
 		sim->bus_paths[tmp_en] = tmp_bst;
 
-		if(current_index < tmp_vec.size())
+		if (current_index < tmp_vec.size())
 		{
 			has_reached = tmp_en->move(to_point, sim->v_grid, sim->cam);
 
 			// checking if next index is empty
-			if(current_index < tmp_vec.size() - 1)
+			if (current_index < tmp_vec.size() - 1)
 			{
 				SDL_Point p_to_check = tmp_vec[current_index + 1];
 
@@ -239,22 +254,22 @@ void run(Simulation *sim)
 				Entity *traffic_en = get_traffic_signal_at_index(sim, in_to_check);
 				Entity *junc_en = nullptr;
 
-				if(tmp_en_2)
+				if (tmp_en_2)
 				{
 					has_reached = false;
 				}
-				if(traffic_en && !sim->en_has_crossed_junc[tmp_en])
+				if (traffic_en && !sim->en_has_crossed_junc[tmp_en])
 				{
 					Direction d1 = ((TrafficLight*)(traffic_en))->current_arrow_direction;
 					Direction d2 = ((Bus*)(tmp_en))->current_move_direction;
 
-					if(d1 == d2)
+					if (d1 == d2)
 						sim->en_has_crossed_junc[tmp_en] = true;
 					else
 						has_reached = false;
 				}
 
-				if(traffic_en)
+				if (traffic_en)
 				{
 					int tmp_junc_id = ((TrafficLight*)(traffic_en))->junc_id;
 					junc_en = sim->e_sys->get_en_with_id(tmp_junc_id);
@@ -263,9 +278,15 @@ void run(Simulation *sim)
 			}
 		}
 
-		if(has_reached && current_index < tmp_vec.size())
+		if (has_reached && current_index < tmp_vec.size())
+		{
 			sim->bus_current_path_index[tmp_en] = ++current_index;
-		else if(current_index == tmp_vec.size() - 1)
+
+			// Increasing miles_driven by 0.1f;
+			((Vehicle*)(tmp_en))->miles_driven += 0.1f;
+			((Vehicle*)(tmp_en))->fuel_consumed += 0.05f;
+		}
+		else if (current_index == tmp_vec.size() - 1)
 			sim->bus_current_path_index[tmp_en] = 0;
 
 		update_current_stand_for_bus(tmp_en, sim->bus_stands, sim->gp, sim->v_grid);
@@ -277,7 +298,7 @@ void run(Simulation *sim)
 		*/
 	}
 
-	/*	Transporting people 
+	/*	Transporting people
 		For every person check all the busses, if any bus'es current_bus_stand->id matches
 		with the person's current_bus_stand->id then:
 		Check if the bus'es->id matched any of the person's->bordable_bus_id, If Yes then:
@@ -314,7 +335,9 @@ void run(Simulation *sim)
 							current_person->is_travelling = true;
 							current_person->current_bus_stand_id = -1;
 							current_person->current_bus_id = current_bus->id;
+							current_person->start_mile = current_bus->miles_driven;
 							is_eligible = true;
+
 
 							// Get the pavement the person was in and set its->is_occupied = false;
 							Pavement *pave_en =
@@ -329,16 +352,24 @@ void run(Simulation *sim)
 		}
 		else // Person is travelling
 		{
+			// Checking if person has reched destionation, if so do the necessary.
+			// Checking if person has reched destionation, if so do the necessary.
 			Bus *current_bus_en = (Bus*)(get_bus_with_id(current_person->current_bus_id, sim));
 			if (current_bus_en && current_bus_en->current_bus_stand &&
 				current_bus_en->current_bus_stand->id == current_person->des_bus_stand_id)
 			{
-				std::cout << "Person with id: " << current_person->id << " has reached destination." << std::endl;
 				current_person->is_travelling = false;
 				current_person->current_bus_stand_id = current_bus_en->current_bus_stand->id;
 				current_person->current_bus_id = -1;
 				current_person->has_reached_des = true;
-				current_person->des_bus_stand_id = -1; // So that they don't keep travelling
+				current_person->des_bus_stand_id = -1; // So that they don't keep travelling in circles
+
+				// Calculating the total_miles spent in the bus
+				float total_miles = current_bus_en->miles_driven - current_person->start_mile;
+				current_person->money_spent = total_miles * 5.0f;
+
+				std::cout << "Person with id: " << current_person->id << " has reached destination."
+					<< " Money spent is: " << current_person->money_spent << std::endl;
 
 				// Updating the person's new position
 				Pavement *tmp_pv = (Pavement*)(get_entity_next_to_type_with_id(current_bus_en->current_bus_stand->id,

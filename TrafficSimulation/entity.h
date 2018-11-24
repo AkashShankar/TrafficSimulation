@@ -94,15 +94,12 @@ struct EntitySystem
 
 struct Vehicle: public Entity
 {
-	/*
-		int miles_driven = 0;
-		int fuel_consumed = 0;
-		int num_seats = 0;
-	*/
-	
+	Direction current_move_direction;
 	int vehicle_image_index = -1;
 	int speed = 1;
-	Direction current_move_direction;
+	float fuel_consumed = 0; // Say 1l can go 2 miles
+	// int num_seats = 0; @NotSure
+	float miles_driven = 0;
 	int src_index = -1;
 	int des_index = -1;
 
@@ -111,7 +108,7 @@ struct Vehicle: public Entity
 	bool move(SDL_Point p, VirtualGrid *v_grid, Camera *cam);
 };
 
-struct TrafficLight: public Entity
+struct TrafficLight : public Entity
 {
 	Direction current_arrow_direction;
 	bool is_green = false;
@@ -170,7 +167,7 @@ struct Rect_V : public Entity
 	void connect_en(Entity *to_en);
 };
 
-struct Person: public Entity
+struct Person : public Entity
 {
 	int image_index = -1;
 	int current_bus_stand_id = -1;
@@ -180,6 +177,12 @@ struct Person: public Entity
 	int current_bus_id = -1;
 	bool has_reached_des = false;
 
+	// Since people can only travel through busses, cost per mile lets say is 5rs.
+	float money_spent = 0.0f;
+	// To calculate the miles travelled we need the number of miles spent in the bus.
+	// For that we need the miles_driven of the bus, when the person first boarded the bus
+	float start_mile = 0.0f;
+
 	/* bool is_male = false;
 	 */
 
@@ -187,18 +190,19 @@ struct Person: public Entity
 	std::vector<int> get_required_adjacent_indices(VirtualGrid *v_grid);
 };
 
-struct BusStand: public Entity
+struct BusStand : public Entity
 {
 	void init(int id, int x, int y, Grid *grid, VirtualGrid *v_grid, Camera *cam);
 	std::vector<int> get_required_adjacent_indices(VirtualGrid *v_grid);
 };
 
-struct Car: public Vehicle
+struct Car : public Vehicle
 {
+	bool has_reached_des = false;
 	void init(int id, int x, int y, Grid *grid, VirtualGrid *v_grid, Camera *cam);
 };
 
-struct Bus: public Vehicle
+struct Bus : public Vehicle
 {
 	void init(int id, int x, int y, Grid *grid, VirtualGrid *v_grid, Camera *cam);
 	std::vector<int> bus_stands; // in go_order
