@@ -14,6 +14,7 @@
 #include "graph.h"
 #include "simulation.h"
 #include "query.h"
+#include "DB_Connection.h"
 
 struct Test : public Handle
 {
@@ -37,6 +38,7 @@ std::vector<Display *> all_displays;
 Utils utils;
 Simulation sim;
 bool return_pressed = false;
+DB_Connection db_con;
 
 int simulation_run(void *ptr);
 
@@ -75,6 +77,11 @@ int main(int argc, char **argv)
 
 	utils.init_utils();
 
+	db_con.init();
+	/* tmp */
+	db_con.get_all_car();
+	/* tmp */
+
 	sim.e_sys = &en_sys;
 	sim.ed = &editor;
 	sim.gp = &graph;
@@ -92,6 +99,7 @@ int main(int argc, char **argv)
 	main_display.destroy();
 	editor.destroy();
 	v_grid.destroy();
+	db_con.destroy();
 	SDL_WaitThread(sim.sim_run_th, &sim_run_th_value);
 	std::cout << "Ended successfully" << std::endl;
 	quit_sdl();

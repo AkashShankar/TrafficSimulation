@@ -135,8 +135,33 @@ EntityType get_type_from_str(std::string str)
 		tmp_type = EntityType::PAVEMENT;
 	else if (str == "person")
 		tmp_type = EntityType::PERSON;
+	else if (str == "bus")
+		tmp_type = EntityType::BUS;
+	else if (str == "traffic_light")
+		tmp_type = EntityType::TRAFFIC_LIGHT;
+	else if (str == "bus_stand")
+		tmp_type = EntityType::BUS_STAND;
+	else if (str == "rect_h")
+		tmp_type = EntityType::RECT_H;
+	else if (str == "rect_v")
+		tmp_type = EntityType::RECT_V;
 
 	return tmp_type;
+}
+
+Angle get_angle_from_str(std::string str)
+{
+	Angle tmp_angle = Angle::ZERO;
+	if (str == "zero")
+		tmp_angle = Angle::ZERO;
+	else if (str == "ninety")
+		tmp_angle = Angle::NINETY;
+	else if (str == "hun_eighty")
+		tmp_angle = Angle::HUN_EIGHTY;
+	else if (str == "two_seventy")
+		tmp_angle = Angle::TWO_SEVENTY;
+
+	return tmp_angle;
 }
 
 Entity* make_entity_from_type(EntityType type)

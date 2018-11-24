@@ -43,6 +43,7 @@ struct Utils
 IconType get_icon_type_from_entity_type(EntityType type, Utils *ut);
 EntityType get_entity_type_from_icon_type(IconType type, Utils *ut);
 EntityType get_type_from_str(std::string str);
+Angle get_angle_from_str(std::string str);
 Entity* make_entity_from_type(EntityType type);
 bool if_string_is_digit(std::string str);
 bool is_en_type_a_vehicle(EntityType type);
