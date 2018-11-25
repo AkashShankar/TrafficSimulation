@@ -715,8 +715,6 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Con
 		int time_delay = en->time_delay;
 		int junc_id = en->junc_id;
 
-		std::cout << "junc_id: " << junc_id << std::endl;
-
 		int pos_x = en->pos.x + cam->pos.x;
 		int pos_y = en->pos.y + cam->pos.y;
 

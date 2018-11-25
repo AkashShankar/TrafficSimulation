@@ -338,7 +338,6 @@ void run(Simulation *sim)
 							current_person->start_mile = current_bus->miles_driven;
 							is_eligible = true;
 
-
 							// Get the pavement the person was in and set its->is_occupied = false;
 							Pavement *pave_en =
 								(Pavement*)(get_pavement_next_to_road_with_bst_id(current_bus->current_bus_stand->id, sim->gp));
