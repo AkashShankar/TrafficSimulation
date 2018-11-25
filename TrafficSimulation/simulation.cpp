@@ -195,6 +195,7 @@ void run(Simulation *sim)
 		if (has_reached && current_index < tmp_vec.size())
 		{
 			sim->car_current_path_index[tmp_en] = ++current_index;
+			sim->en_has_crossed_junc[tmp_en] = false;
 
 			// Increasing miles_driven by 0.1f;
 			((Vehicle*)(tmp_en))->miles_driven += 0.1f;
