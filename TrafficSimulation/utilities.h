@@ -69,7 +69,10 @@ void set_current_bs_to_person(Entity *ps_en, Graph *gp, EntitySystem *e_sys);
 
 bool is_coo_within_rect(int x, int y, const SDL_Rect &rect);
 void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Connection *db_con);
-void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim);
+
+void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim, DB_Connection *db_con);
+void load_basic_en(int occ_index, int count, EntityType type, int id, Angle angle, EntitySystem *en_sys, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim, int tl_pos_x = 0, int tl_pos_y = 0);
+
 bool if_connected(EntitySystem *en_sys, VirtualGrid *v_grid, Entity *e1, Entity *e2);
 bool if_angle_is_left_or_right(Angle a1, Angle a2);
 bool if_angle_is_up_or_down(Angle a1, Angle a2);

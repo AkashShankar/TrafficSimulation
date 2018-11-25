@@ -294,7 +294,7 @@ void Editor::on_editor_click_take_action(EntitySystem *e_sys, Grid *grid, Virtua
 	}
 	else if (currently_selected_icon->type == IconType::LOAD)
 	{
-		load_entities(e_sys, "Saves\\test.bin", grid, v_grid, cam, gp, sim);
+		load_entities(e_sys, "Saves\\test.bin", grid, v_grid, cam, gp, sim, db_con);
 	}
 	else if(currently_selected_icon->type == IconType::START)
 	{

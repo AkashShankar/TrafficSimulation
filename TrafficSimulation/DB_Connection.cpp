@@ -39,6 +39,34 @@ std::vector<DB_Reg_En> DB_Connection::get_all_reg_en()
 	return tmp_reg_ens;
 }
 
+std::vector<DB_Reg_En> DB_Connection::get_all_bus_stand()
+{
+	stmt = con->createStatement();
+	res = stmt->executeQuery("select * from BusStand");
+
+	std::vector<DB_Reg_En> tmp_bst_ens;
+
+	while (res->next())
+	{
+		DB_Reg_En tmp_reg_en;
+
+		std::string type_in_str = res->getString("type");
+		std::string angle_in_str = res->getString("angle");
+
+		tmp_reg_en.id = res->getInt("id");
+		tmp_reg_en.occ_index = res->getInt("occ_index");
+		tmp_reg_en.type = get_type_from_str(type_in_str);
+		tmp_reg_en.angle = get_angle_from_str(angle_in_str);
+
+		tmp_bst_ens.push_back(tmp_reg_en);
+	}
+
+	delete res;
+	delete stmt;
+
+	return tmp_bst_ens;
+}
+
 std::vector<DB_Car> DB_Connection::get_all_car()
 {
 	stmt = con->createStatement();
@@ -102,7 +130,7 @@ std::vector<DB_Bus> DB_Connection::get_all_bus()
 
 		// the bus_stands
 		std::string tmp_string = "select bus_stand_id from bus_bus_stands where bus_id = ";
-		tmp_string += tmp_reg_en.id;
+		tmp_string += std::to_string(tmp_reg_en.id);
 		tmp_string += ";";
 
 		res_2 = stmt_2->executeQuery(tmp_string);
@@ -110,10 +138,10 @@ std::vector<DB_Bus> DB_Connection::get_all_bus()
 		{
 			tmp_bus.bus_stand_ids.push_back(res_2->getInt("bus_stand_id"));
 		}
-
 		delete res_2;
 
 		tmp_bus.reg_en = tmp_reg_en;
+		tmp_busses.push_back(tmp_bus);
 	}
 
 	delete stmt;
@@ -150,14 +178,14 @@ std::vector<DB_Person> DB_Connection::get_all_person()
 		tmp_person.money_spent = res->getDouble("money_spent");
 
 		// bus_ids
-		std::string tmp_string = "select bus_stand_id from person_bus_stands where person_id = ";
-		tmp_string += tmp_reg_en.id;
+		std::string tmp_string = "select bus_id from person_bus where person_id = ";
+		tmp_string += std::to_string(tmp_reg_en.id);
 		tmp_string += ";";
 
 		res_2 = stmt_2->executeQuery(tmp_string);
 		while (res_2->next())
 		{
-			tmp_person.bus_ids.push_back(res_2->getInt("bus_stand_id"));
+			tmp_person.bus_ids.push_back(res_2->getInt("bus_id"));
 		}
 
 		delete res_2;
@@ -177,7 +205,7 @@ std::vector<DB_Traffic_Light> DB_Connection::get_all_traffic_light()
 	stmt = con->createStatement();
 	res = stmt->executeQuery("select * from TrafficLight");
 	std::vector<DB_Traffic_Light> tmp_lights;
-	
+
 	while (res->next())
 	{
 		DB_Reg_En tmp_reg_en;
@@ -206,7 +234,7 @@ std::vector<DB_Traffic_Light> DB_Connection::get_all_traffic_light()
 	return tmp_lights;
 }
 
-std::string DB_Connection::get_basic_str(std::string init_str, int id, EntityType type, 
+std::string DB_Connection::get_basic_str(std::string init_str, int id, EntityType type,
 	Angle angle, int occ_index)
 {
 	std::string str = init_str;
@@ -301,7 +329,7 @@ void DB_Connection::create_new_person_en(int id, EntityType type, Angle angle, i
 	// adding bus_ids to person_bus_stands
 	for (unsigned int i = 0; i < bus_ids.size(); i++)
 	{
-		str = "insert into person_bus_stands values(";
+		str = "insert into person_bus values(";
 		str += std::to_string(id);
 		str += ", ";
 		str += std::to_string(bus_ids[i]);
@@ -342,7 +370,7 @@ void DB_Connection::truncate_all()
 {
 	execute_stmt("truncate reg_en;");
 	execute_stmt("truncate car;");
-	execute_stmt("drop table person_bus_stands;");
+	execute_stmt("drop table person_bus;");
 	execute_stmt("drop table bus_bus_stands;");
 	execute_stmt("truncate bus;");
 	execute_stmt("truncate person;");
@@ -353,9 +381,9 @@ void DB_Connection::truncate_all()
 	execute_stmt("alter table bus_bus_stands add foreign key(bus_id) references bus(id);");
 	execute_stmt("alter table bus_bus_stands add foreign key(bus_stand_id) references busstand(id);");
 
-	execute_stmt("create table person_bus_stands(person_id int, bus_stand_id int);");
-	execute_stmt("alter table person_bus_stands add foreign key(person_id) references bus(id);");
-	execute_stmt("alter table person_bus_stands add foreign key(bus_stand_id) references busstand(id);");
+	execute_stmt("create table person_bus(person_id int, bus_id int);");
+	execute_stmt("alter table person_bus add foreign key(person_id) references person(id);");
+	execute_stmt("alter table person_bus add foreign key(bus_id) references bus(id);");
 }
 
 std::string DB_Connection::get_in_quotes(int value)
@@ -371,6 +399,7 @@ void DB_Connection::execute_stmt(std::string str)
 {
 	stmt = con->createStatement();
 	stmt->execute(str);
+
 	delete stmt;
 }
 

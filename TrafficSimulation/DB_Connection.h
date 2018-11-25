@@ -73,6 +73,7 @@ struct DB_Connection
 	std::vector<DB_Bus> get_all_bus();
 	std::vector<DB_Person> get_all_person();
 	std::vector<DB_Traffic_Light> get_all_traffic_light();
+	std::vector<DB_Reg_En> get_all_bus_stand();
 
 	void create_new_reg_en(int id, EntityType type, Angle angle, int occ_index);
 	void create_new_car_en(int id, EntityType type, Angle angle, int occ_index, int speed, 

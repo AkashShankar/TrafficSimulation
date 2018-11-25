@@ -78,9 +78,6 @@ int main(int argc, char **argv)
 	utils.init_utils();
 
 	db_con.init();
-	/* tmp */
-	db_con.truncate_all();
-	/* tmp */
 
 	sim.e_sys = &en_sys;
 	sim.ed = &editor;

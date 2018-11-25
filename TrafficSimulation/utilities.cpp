@@ -610,10 +610,16 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Con
 
 	std::vector<Entity*> nm_ens;
 	std::vector<Entity*> m_ens;
+	std::vector<Entity*> people_ens;
+	std::vector<Entity*> light_ens;
 	for(unsigned int i = 0; i < en_sys->entities.size(); i++)
 	{
-		if(is_en_type_a_vehicle(en_sys->entities[i]->type))
+		if (is_en_type_a_vehicle(en_sys->entities[i]->type))
 			m_ens.push_back(en_sys->entities[i]);
+		else if (en_sys->entities[i]->type == EntityType::PERSON)
+			people_ens.push_back(en_sys->entities[i]);
+		else if (en_sys->entities[i]->type == EntityType::TRAFFIC_LIGHT)
+			light_ens.push_back(en_sys->entities[i]);
 		else
 			nm_ens.push_back(en_sys->entities[i]);
 	}
@@ -626,7 +632,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Con
 	// delete the previous content of the traffic database
 	db_con->truncate_all();
 
-	std::cout << "Truncated" << std::endl;
+	std::cout << "truncated database" << std::endl;
 
 	// non-movable entities
 	for (unsigned int i = 0; i < nm_ens.size(); i++)
@@ -636,30 +642,7 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Con
 		Angle angle = nm_ens[i]->angle;
 		int occ_index = nm_ens[i]->occupied_indices[0];
 
-		if (type == EntityType::TRAFFIC_LIGHT)
-		{
-			TrafficLight *en = (TrafficLight*)(nm_ens[i]);
-			int time_delay = en->time_delay;
-			int junc_id = en->junc_id;
-			int pos_x = en->pos.x + cam->pos.x;
-			int pos_y = en->pos.y + cam->pos.y;
-
-			db_con->create_new_traffic_light_en(id, type, angle, occ_index, 
-				time_delay, junc_id, pos_x, pos_y);
-		}
-		else if (type == EntityType::PERSON)
-		{
-			Person *en = (Person*)(nm_ens[i]);
-			int image_index = en->image_index;
-			int current_bus_stand_id = en->current_bus_stand_id;
-			int des_bus_stand_id = en->des_bus_stand_id;
-			std::vector<int> bordable_bus_ids = en->bordable_bus_ids;
-			float money_spent = en->money_spent;
-
-			db_con->create_new_person_en(id, type, angle, occ_index, image_index,
-				current_bus_stand_id, des_bus_stand_id, money_spent, bordable_bus_ids);
-		}
-		else if(type == EntityType::BUS_STAND)
+		if(type == EntityType::BUS_STAND)
 		{
 			db_con->create_new_bus_stand_en(id, type, angle, occ_index);
 		}
@@ -702,6 +685,149 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Con
 				bus_ids);
 		}
 	}
+
+	for (unsigned int i = 0; i < people_ens.size(); i++)
+	{
+		int id = people_ens[i]->id;
+		EntityType type = people_ens[i]->type;
+		Angle angle = people_ens[i]->angle;
+		int occ_index = people_ens[i]->occupied_indices[0];
+
+		Person *en = (Person*)(people_ens[i]);
+		int image_index = en->image_index;
+		int current_bus_stand_id = en->current_bus_stand_id;
+		int des_bus_stand_id = en->des_bus_stand_id;
+		std::vector<int> bordable_bus_ids = en->bordable_bus_ids;
+		float money_spent = en->money_spent;
+
+		db_con->create_new_person_en(id, type, angle, occ_index, image_index,
+			current_bus_stand_id, des_bus_stand_id, money_spent, bordable_bus_ids);
+	}
+
+	for (unsigned int i = 0; i < light_ens.size(); i++)
+	{
+		int id = light_ens[i]->id;
+		EntityType type = light_ens[i]->type;
+		Angle angle = light_ens[i]->angle;
+		int occ_index = light_ens[i]->occupied_indices[0];
+
+		TrafficLight *en = (TrafficLight*)(light_ens[i]);
+		int time_delay = en->time_delay;
+		int junc_id = en->junc_id;
+
+		std::cout << "junc_id: " << junc_id << std::endl;
+
+		int pos_x = en->pos.x + cam->pos.x;
+		int pos_y = en->pos.y + cam->pos.y;
+
+		db_con->create_new_traffic_light_en(id, type, angle, occ_index,
+			time_delay, junc_id, pos_x, pos_y);
+	}
+
+	std::cout << "saved to the db." << std::endl;
+}
+
+void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, VirtualGrid *v_grid,
+	Camera *cam, Graph *gp, Simulation *sim, DB_Connection *db_con)
+{
+	std::cout << "loading.. " << std::endl;
+
+	// non-movable
+	std::vector<DB_Reg_En> reg_ens = db_con->get_all_reg_en();
+	std::vector<DB_Person> person_ens = db_con->get_all_person();
+	std::vector<DB_Traffic_Light> light_ens = db_con->get_all_traffic_light();
+	std::vector<DB_Reg_En> bst_ens = db_con->get_all_bus_stand();
+
+	// movable
+	std::vector<DB_Bus> bus_ens = db_con->get_all_bus();
+	std::vector<DB_Car> car_ens = db_con->get_all_car();
+
+	// clearing the map
+	en_sys->clear_all_entities(v_grid);
+	// clearing the map
+
+	int count = 0;
+
+	for (unsigned int i = 0; i < reg_ens.size(); i++)
+	{
+		DB_Reg_En tmp_en = reg_ens[i];
+		load_basic_en(tmp_en.occ_index, count, tmp_en.type, tmp_en.id, tmp_en.angle,
+			en_sys, grid, v_grid, cam, gp, sim);
+
+		count++;
+	}
+
+	for (unsigned int i = 0; i < person_ens.size(); i++)
+	{
+		DB_Person tmp_en = person_ens[i];
+		load_basic_en(tmp_en.reg_en.occ_index, count, tmp_en.reg_en.type, tmp_en.reg_en.id,
+			tmp_en.reg_en.angle, en_sys, grid, v_grid, cam, gp, sim);
+
+		Person *en = (Person*)(en_sys->entities[count]);
+		en->bordable_bus_ids = tmp_en.bus_ids;
+		en->current_bus_stand_id = tmp_en.current_bst_id;
+		en->des_bus_stand_id = tmp_en.des_bst_id;
+		en->image_index = tmp_en.image_index;
+		en->money_spent = tmp_en.money_spent;
+
+		count++;
+	}
+
+	for (unsigned int i = 0; i < light_ens.size(); i++)
+	{
+		DB_Traffic_Light tmp_en = light_ens[i];
+		load_basic_en(tmp_en.reg_en.occ_index, count, tmp_en.reg_en.type, tmp_en.reg_en.id,
+			tmp_en.reg_en.angle, en_sys, grid, v_grid, cam, gp, sim, tmp_en.pos_x, tmp_en.pos_y);
+
+		TrafficLight *en = (TrafficLight*)(en_sys->entities[count]);
+		en->time_delay = tmp_en.time_delay;
+
+		count++;
+	}
+
+	for (unsigned int i = 0; i < bst_ens.size(); i++)
+	{
+		DB_Reg_En tmp_en = bst_ens[i];
+		load_basic_en(tmp_en.occ_index, count, tmp_en.type, tmp_en.id,
+			tmp_en.angle, en_sys, grid, v_grid, cam, gp, sim);
+
+		count++;
+	}
+
+	for (unsigned int i = 0; i < bus_ens.size(); i++)
+	{
+		DB_Bus tmp_en = bus_ens[i];
+		load_basic_en(tmp_en.reg_en.occ_index, count, tmp_en.reg_en.type, tmp_en.reg_en.id,
+			tmp_en.reg_en.angle, en_sys, grid, v_grid, cam, gp, sim);
+
+		Bus *en = (Bus*)(en_sys->entities[count]);
+		en->bus_stands = tmp_en.bus_stand_ids;
+		en->fuel_consumed = tmp_en.fuel_consumed;
+		en->speed = tmp_en.speed;
+		en->miles_driven = tmp_en.miles_driven;
+
+		count++;
+	}
+
+	for (unsigned int i = 0; i < car_ens.size(); i++)
+	{
+		DB_Car tmp_en = car_ens[i];
+		load_basic_en(tmp_en.reg_en.occ_index, count, tmp_en.reg_en.type, tmp_en.reg_en.id,
+			tmp_en.reg_en.angle, en_sys, grid, v_grid, cam, gp, sim);
+
+		Car *en = (Car*)(en_sys->entities[count]);
+		en->src_index = tmp_en.src_index;
+		en->des_index = tmp_en.des_index;
+		en->fuel_consumed = tmp_en.fuel_consumed;
+		en->miles_driven = tmp_en.miles_driven;
+		en->speed = tmp_en.speed;
+		en->vehicle_image_index = tmp_en.car_image_index;
+
+		count++;
+	}
+
+	init(sim);
+	std::cout << "loaded from the db." << std::endl;
 }
 
 /*
@@ -853,12 +979,12 @@ void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
 }
 */
 
+/*
 void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim)
 {
-	/* IMP: First write the non-movable entities, because the movable entities has
-	 * to be rendered on top on the non-movable entities, otherwise it can't
-	 * be seen
-	 */
+	 // IMP: First write the non-movable entities, because the movable entities has
+	 // to be rendered on top on the non-movable entities, otherwise it can't
+	 // be seen
 
 	std::ifstream read;
 	read.open(f_name.c_str(), std::ios::binary);
@@ -1013,6 +1139,44 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 
 	init(sim);
 	read.close();
+}
+*/
+
+void load_basic_en(int occ_index, int count, EntityType type, int id, Angle angle, EntitySystem *en_sys, Grid *grid,
+	VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim, int tl_pos_x, int tl_pos_y)
+{
+	SDL_Point tmp_pos = v_grid->get_pos_from_index(occ_index);
+
+	// Has to be done before bounding the position to grid dims
+	int bef_bound_x = tmp_pos.x;
+	int bef_bound_y = tmp_pos.y;
+	if (type == EntityType::TRAFFIC_LIGHT)
+	{
+		bef_bound_x = tl_pos_x;
+		bef_bound_y = tl_pos_y;
+	}
+	// Has to be done before bounding the position to grid dims
+
+	tmp_pos = v_grid->bound_pos_to_grid_dims(grid, tmp_pos.x + 2, tmp_pos.y + 2);
+
+	if (type == EntityType::TRAFFIC_LIGHT)
+		en_sys->load_entity(type, tmp_pos.x - grid->per_width / 2, tmp_pos.y - grid->per_height / 2, grid, v_grid, cam);
+	else
+		en_sys->load_entity(type, tmp_pos.x, tmp_pos.y, grid, v_grid, cam);
+
+	Entity *current_en = en_sys->entities[count];
+
+	// Has to be done before bounding the position to grid dims
+	current_en->pos.x = bef_bound_x;
+	current_en->pos.y = bef_bound_y;
+	v_grid->set_filled(bef_bound_x + 2, bef_bound_y + 2, current_en->num_rows_cols.x, current_en->num_rows_cols.y);
+	current_en->occupied_indices = v_grid->get_indices(bef_bound_x + 2, bef_bound_y + 2, current_en->num_rows_cols.x, current_en->num_rows_cols.y);
+	// Has to be done before bounding the position to grid dims
+
+	current_en->id = id;
+	current_en->angle = angle;
+
+	init_en_occu_indices(current_en->occ_conn, current_en->occupied_indices, type, angle);
 }
 
 bool if_connected(EntitySystem *en_sys, VirtualGrid *v_grid, Entity *e1, Entity *e2)
