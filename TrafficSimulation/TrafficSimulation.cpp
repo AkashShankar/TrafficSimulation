@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 	// Working.
 	test.loop();
 
-	db_con.generate_report();
+	db_con.generate_report(&sim);
 
 	main_display.destroy();
 	editor.destroy();

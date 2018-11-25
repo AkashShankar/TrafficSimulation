@@ -387,12 +387,16 @@ void DB_Connection::truncate_all()
 	execute_stmt("alter table person_bus add foreign key(bus_id) references bus(id);");
 }
 
-void DB_Connection::generate_report()
+void DB_Connection::generate_report(Simulation *sim)
 {
 	std::ofstream wr;
 	wr.open("report.txt");
 	if (!wr)
 		return;
+
+	std::string person_str_1 = update_money_spent(sim);
+	std::string bus_cars_str_1 = update_miles_driven_and_fuel(sim);
+	std::string extra_1 = get_extra_info();
 
 	int total_roads = 0;
 	int total_junctions = 0;
@@ -454,6 +458,15 @@ void DB_Connection::generate_report()
 	wr << "total cars: " << total_cars << "\n";
 	wr << "total busses: " << total_busses << "\n";
 
+	wr << "\n";
+	wr << person_str_1 << "\n";
+
+	wr << "\n";
+	wr << bus_cars_str_1 << "\n";
+
+	wr << "\n";
+	wr << extra_1 << "\n\n";
+
 	wr << "\n--------------------- REPORT------------------------\n";
 
 	wr.close();
@@ -466,6 +479,155 @@ std::string DB_Connection::get_in_quotes(int value)
 	tmp += "'";
 
 	return tmp;
+}
+
+std::string DB_Connection::update_money_spent(Simulation *sim)
+{
+	std::vector<Person*> people;
+	for (unsigned int i = 0; i < sim->people.size(); i++)
+		people.push_back((Person*)(sim->people[i]));
+
+	std::string str;
+
+	for (unsigned int i = 0; i < people.size(); i++)
+	{
+		std::string qe = "update person set money_spent = ";
+		qe += std::to_string(people[i]->money_spent);
+		qe = qe.substr(0, qe.size() - 5); // because of float(3,1) in sql
+		qe += " where id = ";
+		qe += std::to_string(people[i]->id);
+		qe += ";";
+
+		// std::cout << i << ": " << qe << std::endl;
+
+		str += "Person with id ";
+		str += std::to_string(people[i]->id);
+		str += " has spent ";
+		str += std::to_string(people[i]->money_spent);
+		str += " Rs.";
+		str += "\n";
+
+		execute_stmt(qe);
+	}
+
+	return str;
+}
+
+std::string DB_Connection::get_extra_info()
+{
+	std::string str;
+
+	res = execute_query("select avg(fuel_consumed) from car;");
+	float avg_cars_fuel;
+	res->next();
+	avg_cars_fuel = res->getDouble(1);
+	str = "Average fuel_consumed by all cars is ";
+	str += std::to_string(avg_cars_fuel);
+	str += " ltrs.\n";
+	delete res;
+
+	res = execute_query("select avg(fuel_consumed) from bus;");
+	res->next();
+	float avg_busses_fuel;
+	avg_busses_fuel = res->getDouble(1);
+	str += "Average fuel_consumed by all busses is ";
+	str += std::to_string(avg_busses_fuel);
+	str += " ltrs.\n";
+	delete res;
+
+	res = execute_query("select avg(money_spent) from person;");
+	res->next();
+	float avg_money_spent;
+	avg_money_spent = res->getDouble(1);
+	str += "Average money_spent by all people is ";
+	str += std::to_string(avg_money_spent);
+	str += " Rs.";
+	delete res;
+
+	return str;
+}
+
+std::string DB_Connection::update_miles_driven_and_fuel(Simulation *sim)
+{
+	std::vector<Car*> cars;
+	std::vector<Bus*> busses;
+
+	for (unsigned int i = 0; i < sim->bus_ens.size(); i++)
+		busses.push_back((Bus*)(sim->bus_ens[i]));
+
+	for (unsigned int i = 0; i < sim->car_ens.size(); i++)
+		cars.push_back((Car*)(sim->car_ens[i]));
+
+	std::string str;
+	for (unsigned int i = 0; i < cars.size(); i++)
+	{
+		std::string qe;
+
+		qe = "update car set fuel_consumed = ";
+		qe += std::to_string(cars[i]->fuel_consumed);
+		qe = qe.substr(0, qe.size() - 5); // because of float(3,1) in sql
+		qe += " where id = ";
+		qe += std::to_string(cars[i]->id);
+		qe += ";";
+
+		// std::cout << qe << std::endl;
+
+		execute_stmt(qe);
+
+		qe = "update car set miles_driven = ";
+		qe += std::to_string(cars[i]->miles_driven);
+		qe = qe.substr(0, qe.size() - 5); // because of float(3,1) in sql
+		qe += " where id = ";
+		qe += std::to_string(cars[i]->id);
+		qe += ";";
+
+		// std::cout << qe << std::endl;
+
+		str += "Car with id ";
+		str += std::to_string(cars[i]->id);
+		str += " has consumed ";
+		str += std::to_string(cars[i]->fuel_consumed);
+		str += " ltrs of fuel and has travelled ";
+		str += std::to_string(cars[i]->miles_driven);
+		str += " miles.\n";
+
+		execute_stmt(qe);
+	}
+
+	for (unsigned int i = 0; i < busses.size(); i++)
+	{
+		std::string qe;
+
+		qe = "update bus set fuel_consumed = ";
+		qe += std::to_string(busses[i]->fuel_consumed);
+		qe = qe.substr(0, qe.size() - 5); // because of float(3,1) in sql
+		qe += " where id = ";
+		qe += std::to_string(busses[i]->id);
+		qe += ";";
+
+		execute_stmt(qe);
+		// std::cout << qe << std::endl;
+
+		qe = "update bus set miles_driven = ";
+		qe += std::to_string(busses[i]->miles_driven);
+		qe = qe.substr(0, qe.size() - 5); // because of float(3,1) in sql
+		qe += " where id = ";
+		qe += std::to_string(busses[i]->id);
+		qe += ";";
+
+		execute_stmt(qe);
+		// std::cout << qe << std::endl;
+
+		str += "Bus with id ";
+		str += std::to_string(busses[i]->id);
+		str += " has consumed ";
+		str += std::to_string(busses[i]->fuel_consumed);
+		str += "ltrs of fuel and has travelled ";
+		str += std::to_string(busses[i]->miles_driven);
+		str += " miles.\n";
+	}
+
+	return str;
 }
 
 sql::ResultSet* DB_Connection::execute_query(std::string str)

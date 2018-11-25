@@ -9,6 +9,8 @@
 #include <jdbc/mysql_driver.h>
 #include <jdbc/cppconn/resultset.h>
 
+struct Simulation;
+
 struct DB_Reg_En
 {
 	int id = -1;
@@ -89,7 +91,10 @@ struct DB_Connection
 	std::string get_basic_str(std::string init_str, int id, EntityType type, Angle angle, int occ_index);
 	std::string get_in_quotes(int value);
 
-	void generate_report();
+	void generate_report(Simulation *sim);
+	std::string update_money_spent(Simulation *sim);
+	std::string update_miles_driven_and_fuel(Simulation *sim);
+	std::string get_extra_info();
 
 	void truncate_all();
 	inline void execute_stmt(std::string str);
