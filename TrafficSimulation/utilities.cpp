@@ -779,6 +779,7 @@ void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, Virtual
 
 		TrafficLight *en = (TrafficLight*)(en_sys->entities[count]);
 		en->time_delay = tmp_en.time_delay;
+		en->junc_id = tmp_en.junc_id;
 
 		count++;
 	}

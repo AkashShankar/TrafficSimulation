@@ -195,7 +195,6 @@ void run(Simulation *sim)
 		if (has_reached && current_index < tmp_vec.size())
 		{
 			sim->car_current_path_index[tmp_en] = ++current_index;
-			sim->en_has_crossed_junc[tmp_en] = false;
 
 			// Increasing miles_driven by 0.1f;
 			((Vehicle*)(tmp_en))->miles_driven += 0.1f;
@@ -282,7 +281,6 @@ void run(Simulation *sim)
 		if (has_reached && current_index < tmp_vec.size())
 		{
 			sim->bus_current_path_index[tmp_en] = ++current_index;
-			sim->en_has_crossed_junc[tmp_en] = false;
 
 			// Increasing miles_driven by 0.1f;
 			((Vehicle*)(tmp_en))->miles_driven += 0.1f;
@@ -292,12 +290,6 @@ void run(Simulation *sim)
 			sim->bus_current_path_index[tmp_en] = 0;
 
 		update_current_stand_for_bus(tmp_en, sim->bus_stands, sim->gp, sim->v_grid);
-
-		/*
-		if (((Bus*)(tmp_en))->current_bus_stand) {
-			std::cout << "bus_stand_id for bus : " << tmp_en->id << " is: " << ((Bus*)(tmp_en))->current_bus_stand->id << std::endl;
-		}
-		*/
 	}
 
 	/*	Transporting people
