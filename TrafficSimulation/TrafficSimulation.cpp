@@ -218,7 +218,7 @@ void Test::events()
 			else if (ev.key.keysym.sym == SDLK_RETURN)
 			{
 				editor.on_editor_click_take_action(&en_sys, &grid, &v_grid,
-					&camera, &graph, &sim);
+					&camera, &graph, &sim, &db_con);
 				return_pressed = true;
 			}
 			else if (ev.key.keysym.sym == SDLK_w && camera.pos.y > 0)

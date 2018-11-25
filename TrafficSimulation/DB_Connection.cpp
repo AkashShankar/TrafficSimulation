@@ -64,6 +64,7 @@ std::vector<DB_Car> DB_Connection::get_all_car()
 		tmp_car.miles_driven = res->getDouble("miles_driven");
 		tmp_car.src_index = res->getInt("src_index");
 		tmp_car.des_index = res->getInt("des_index");
+		tmp_car.car_image_index = res->getInt("car_image_index");
 
 		tmp_cars.push_back(tmp_car);
 	}
@@ -211,9 +212,16 @@ std::string DB_Connection::get_basic_str(std::string init_str, int id, EntityTyp
 	std::string str = init_str;
 	str += std::to_string(id);
 	str += ", ";
+
+	str += "'";
 	str += get_str_from_type(type);
+	str += "'";
+
 	str += ", ";
+	str += "'";
 	str += get_str_from_angle(angle);
+	str += "'";
+
 	str += ", ";
 	str += std::to_string(occ_index);
 
@@ -225,13 +233,19 @@ void DB_Connection::create_new_reg_en(int id, EntityType type, Angle angle, int 
 	std::string str = get_basic_str("insert into Reg_En values(", id, type, angle, occ_index);
 	str += ");";
 
-	stmt = con->createStatement();
-	stmt->execute(str);
-	delete stmt;
+	execute_stmt(str);
+}
+
+void DB_Connection::create_new_bus_stand_en(int id, EntityType type, Angle angle, int occ_index)
+{
+	std::string str = get_basic_str("insert into BusStand values(", id, type, angle, occ_index);
+	str += ");";
+
+	execute_stmt(str);
 }
 
 void DB_Connection::create_new_car_en(int id, EntityType type, Angle angle, int occ_index, int speed,
-	float fuel_consumed, float miles_driven, int src_index, int des_index)
+	float fuel_consumed, float miles_driven, int src_index, int des_index, int car_image_index)
 {
 	std::string str = get_basic_str("insert into Car values(", id, type, angle, occ_index);
 	str += ", ";
@@ -244,12 +258,11 @@ void DB_Connection::create_new_car_en(int id, EntityType type, Angle angle, int 
 	str += std::to_string(src_index);
 	str += ", ";
 	str += std::to_string(des_index);
-
+	str += ", ";
+	str += std::to_string(car_image_index);
 	str += ");";
 
-	stmt = con->createStatement();
-	stmt->execute(str);
-	delete stmt;
+	execute_stmt(str);
 }
 
 void DB_Connection::create_new_traffic_light_en(int id, EntityType type, Angle angle, int occ_index,
@@ -264,12 +277,9 @@ void DB_Connection::create_new_traffic_light_en(int id, EntityType type, Angle a
 	str += std::to_string(pos_x);
 	str += ", ";
 	str += std::to_string(pos_y);
-
 	str += ");";
 
-	stmt = con->createStatement();
-	stmt->execute(str);
-	delete stmt;
+	execute_stmt(str);
 }
 
 void DB_Connection::create_new_person_en(int id, EntityType type, Angle angle, int occ_index,
@@ -286,9 +296,7 @@ void DB_Connection::create_new_person_en(int id, EntityType type, Angle angle, i
 	str += std::to_string(money_spent);
 	str += ");";
 
-	stmt = con->createStatement();
-	stmt->execute(str);
-	delete stmt;
+	execute_stmt(str);
 
 	// adding bus_ids to person_bus_stands
 	for (unsigned int i = 0; i < bus_ids.size(); i++)
@@ -299,9 +307,7 @@ void DB_Connection::create_new_person_en(int id, EntityType type, Angle angle, i
 		str += std::to_string(bus_ids[i]);
 		str += ");";
 
-		stmt = con->createStatement();
-		stmt->execute(str);
-		delete stmt;
+		execute_stmt(str);
 	}
 }
 
@@ -317,9 +323,7 @@ void DB_Connection::create_new_bus_en(int id, EntityType type, Angle angle, int 
 	str += std::to_string(miles_driven);
 	str += ");";
 
-	stmt = con->createStatement();
-	stmt->execute(str);
-	delete stmt;
+	execute_stmt(str);
 
 	// adding bus_stand_ids to bus_bus_stands
 	for (unsigned int i = 0; i < bus_stand_ids.size(); i++)
@@ -330,9 +334,7 @@ void DB_Connection::create_new_bus_en(int id, EntityType type, Angle angle, int 
 		str += std::to_string(bus_stand_ids[i]);
 		str += ");";
 
-		stmt = con->createStatement();
-		stmt->execute(str);
-		delete stmt;
+		execute_stmt(str);
 	}
 }
 
@@ -354,6 +356,15 @@ void DB_Connection::truncate_all()
 	execute_stmt("create table person_bus_stands(person_id int, bus_stand_id int);");
 	execute_stmt("alter table person_bus_stands add foreign key(person_id) references bus(id);");
 	execute_stmt("alter table person_bus_stands add foreign key(bus_stand_id) references busstand(id);");
+}
+
+std::string DB_Connection::get_in_quotes(int value)
+{
+	std::string tmp = "'";
+	tmp += std::to_string(value);
+	tmp += "'";
+
+	return tmp;
 }
 
 void DB_Connection::execute_stmt(std::string str)

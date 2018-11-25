@@ -17,6 +17,7 @@ struct Text;
 struct Query;
 struct Utils;
 struct Simulation;
+struct DB_Connection;
 
 enum class IconType
 {
@@ -208,12 +209,14 @@ struct Editor
 	void highlight_current_icon(); 
 	void check_and_set_current_icon(int x, int y);
 	void take_action(EntitySystem *e_sys, int x, int y, Grid *grid, VirtualGrid *v_grid, Camera *cam, Utils *ut, Graph *gp, Simulation *sim);
-	void on_editor_click_take_action(EntitySystem *e_sys, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim);
+	void on_editor_click_take_action(EntitySystem *e_sys, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim, DB_Connection *db_con);
 	void query_icon_action(std::string &str, Query *qu);
 	void update_input_text(std::string str);
 
+	/*
 	void check_and_select_two_entities(EntitySystem *e_sys, Grid *grid, Camera *cam, int x, int y);
 	void check_and_highlight_two_entities(SDL_Renderer *ren); // MainDisplay's ren
+	*/
 	void check_and_highlight_vehicle_indices(SDL_Renderer *ren); // MainDisplay's ren
 	void check_and_set_vehicle_indices(int x, int y, EntitySystem *e_sys, Camera *cam, VirtualGrid *v_grid, Grid *grid);
 	void move_vehicle_rects_with_cam(Camera *cam);

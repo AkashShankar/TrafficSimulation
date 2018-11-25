@@ -20,6 +20,7 @@ struct DB_Reg_En
 struct DB_Car
 {
 	DB_Reg_En reg_en;
+	int car_image_index = -1;
 	int speed = 1;
 	float fuel_consumed = 0;
 	float miles_driven = 0;
@@ -75,15 +76,17 @@ struct DB_Connection
 
 	void create_new_reg_en(int id, EntityType type, Angle angle, int occ_index);
 	void create_new_car_en(int id, EntityType type, Angle angle, int occ_index, int speed, 
-		float fuel_consumed, float miles_driven, int src_index, int des_index);
+		float fuel_consumed, float miles_driven, int src_index, int des_index, int car_image_index);
 	void create_new_traffic_light_en(int id, EntityType type, Angle angle, int occ_index,
 		int time_delay, int junc_id, int pos_x, int pos_y);
 	void create_new_person_en(int id, EntityType type, Angle angle, int occ_index,
 		int image_index, int current_bst_id, int des_bst_id, float money_spent, std::vector<int> bus_ids);
 	void create_new_bus_en(int id, EntityType type, Angle angle, int occ_index,
 		int speed, float fuel_consumed, float miles_driven, std::vector<int> bus_stand_ids);
+	void create_new_bus_stand_en(int id, EntityType type, Angle angle, int occ_index);
 
 	std::string get_basic_str(std::string init_str, int id, EntityType type, Angle angle, int occ_index);
+	std::string get_in_quotes(int value);
 
 	void truncate_all();
 	inline void execute_stmt(std::string str);

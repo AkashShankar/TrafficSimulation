@@ -11,6 +11,7 @@
 struct Graph;
 struct Camera;
 struct Simulation;
+struct DB_Connection;
 
 enum class Direction
 {
@@ -67,7 +68,7 @@ void get_all_pavements_rc(std::vector<Entity*> &vec, Entity *start_en, Graph *gp
 void set_current_bs_to_person(Entity *ps_en, Graph *gp, EntitySystem *e_sys);
 
 bool is_coo_within_rect(int x, int y, const SDL_Rect &rect);
-void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam);
+void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Connection *db_con);
 void load_entities(EntitySystem *en_sys, std::string f_name, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim);
 bool if_connected(EntitySystem *en_sys, VirtualGrid *v_grid, Entity *e1, Entity *e2);
 bool if_angle_is_left_or_right(Angle a1, Angle a2);

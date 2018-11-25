@@ -4,6 +4,7 @@
 #include "graph.h"
 #include "grid.h"
 #include "simulation.h"
+#include "DB_Connection.h"
 
 #include <iostream>
 #include <string>
@@ -595,9 +596,112 @@ void print_rect(SDL_Rect *rect)
 }
 /* tmp */
 
-void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam)
+void save_entities(EntitySystem *en_sys, std::string f_name, Camera *cam, DB_Connection *db_con)
 {
+	/* Load it from sql */
+	/* Load it from sql */
+	/* Load it from sql */
+	/* Load it from sql */
+	/* Load it from sql */
+	/* Load it from sql */
+	/* Load it from sql */
+	/* Load it from sql */
+	/* Load it from sql */
 
+	std::vector<Entity*> nm_ens;
+	std::vector<Entity*> m_ens;
+	for(unsigned int i = 0; i < en_sys->entities.size(); i++)
+	{
+		if(is_en_type_a_vehicle(en_sys->entities[i]->type))
+			m_ens.push_back(en_sys->entities[i]);
+		else
+			nm_ens.push_back(en_sys->entities[i]);
+	}
+
+	int num_nm_ens = nm_ens.size();
+	int num_m_ens = m_ens.size();
+
+	std::cout << "Saving....." << std::endl;
+
+	// delete the previous content of the traffic database
+	db_con->truncate_all();
+
+	std::cout << "Truncated" << std::endl;
+
+	// non-movable entities
+	for (unsigned int i = 0; i < nm_ens.size(); i++)
+	{
+		int id = nm_ens[i]->id;
+		EntityType type = nm_ens[i]->type;
+		Angle angle = nm_ens[i]->angle;
+		int occ_index = nm_ens[i]->occupied_indices[0];
+
+		if (type == EntityType::TRAFFIC_LIGHT)
+		{
+			TrafficLight *en = (TrafficLight*)(nm_ens[i]);
+			int time_delay = en->time_delay;
+			int junc_id = en->junc_id;
+			int pos_x = en->pos.x + cam->pos.x;
+			int pos_y = en->pos.y + cam->pos.y;
+
+			db_con->create_new_traffic_light_en(id, type, angle, occ_index, 
+				time_delay, junc_id, pos_x, pos_y);
+		}
+		else if (type == EntityType::PERSON)
+		{
+			Person *en = (Person*)(nm_ens[i]);
+			int image_index = en->image_index;
+			int current_bus_stand_id = en->current_bus_stand_id;
+			int des_bus_stand_id = en->des_bus_stand_id;
+			std::vector<int> bordable_bus_ids = en->bordable_bus_ids;
+			float money_spent = en->money_spent;
+
+			db_con->create_new_person_en(id, type, angle, occ_index, image_index,
+				current_bus_stand_id, des_bus_stand_id, money_spent, bordable_bus_ids);
+		}
+		else if(type == EntityType::BUS_STAND)
+		{
+			db_con->create_new_bus_stand_en(id, type, angle, occ_index);
+		}
+		else
+		{
+			db_con->create_new_reg_en(id, type, angle, occ_index);
+		}
+	}
+
+	// movable entities
+	for (unsigned int i = 0; i < m_ens.size(); i++)
+	{
+		int id = m_ens[i]->id;
+		EntityType type = m_ens[i]->type;
+		Angle angle = m_ens[i]->angle;
+		int occ_index = m_ens[i]->occupied_indices[0];
+
+		if (type == EntityType::CAR)
+		{
+			Car *en = (Car*)(m_ens[i]);
+			int car_image_index = en->vehicle_image_index;
+			int speed = en->speed;
+			float fuel_consumed = en->fuel_consumed;
+			float miles_driven = en->miles_driven;
+			int src_index = en->src_index;
+			int des_index = en->des_index;
+
+			db_con->create_new_car_en(id, type, angle, occ_index, speed, fuel_consumed, miles_driven,
+				src_index, des_index, car_image_index);
+		}
+		else if (type == EntityType::BUS)
+		{
+			Bus *en = (Bus*)(m_ens[i]);
+			int speed = en->speed;
+			float fuel_consumed = en->fuel_consumed;
+			float miles_driven = en->miles_driven;
+			std::vector<int> bus_ids = en->bus_stands;
+			
+			db_con->create_new_bus_en(id, type, angle, occ_index, speed, fuel_consumed, miles_driven,
+				bus_ids);
+		}
+	}
 }
 
 /*

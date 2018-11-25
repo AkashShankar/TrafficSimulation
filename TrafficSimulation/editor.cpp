@@ -9,6 +9,7 @@
 #include "query.h"
 #include "camera.h"
 #include "simulation.h"
+#include "DB_Connection.h"
 
 void Editor::init()
 {
@@ -282,14 +283,14 @@ void Editor::take_action(EntitySystem *e_sys, int x, int y, Grid *grid, VirtualG
 	}
 }
 
-void Editor::on_editor_click_take_action(EntitySystem *e_sys, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim)
+void Editor::on_editor_click_take_action(EntitySystem *e_sys, Grid *grid, VirtualGrid *v_grid, Camera *cam, Graph *gp, Simulation *sim, DB_Connection *db_con)
 {
 	if (!currently_selected_icon)
 		return;
 
 	if (currently_selected_icon->type == IconType::SAVE)
 	{
-		save_entities(e_sys, "Saves\\test.bin", cam);
+		save_entities(e_sys, "Saves\\test.bin", cam, db_con);
 	}
 	else if (currently_selected_icon->type == IconType::LOAD)
 	{
