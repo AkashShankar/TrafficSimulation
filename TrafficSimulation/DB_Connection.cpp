@@ -622,7 +622,7 @@ std::string DB_Connection::update_miles_driven_and_fuel(Simulation *sim)
 		str += std::to_string(busses[i]->id);
 		str += " has consumed ";
 		str += std::to_string(busses[i]->fuel_consumed);
-		str += "ltrs of fuel and has travelled ";
+		str += " ltrs of fuel and has travelled ";
 		str += std::to_string(busses[i]->miles_driven);
 		str += " miles.\n";
 	}

@@ -31,7 +31,7 @@ void MainDisplay::draw()
 	 ed->check_and_highlight_bus(display->ren);
 	 ed->check_and_highlight_pns_and_des_bst(display->ren);
 
-    SDL_SetRenderDrawColor(display->ren, 150, 150, 150, 255);
+    SDL_SetRenderDrawColor(display->ren, 167, 159, 158, 255);
     SDL_RenderPresent(display->ren);
 }
 

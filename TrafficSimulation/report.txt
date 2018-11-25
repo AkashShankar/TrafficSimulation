@@ -1,33 +1,25 @@
 
 --------------------- REPORT------------------------
 
-total roads: 18
-total junctions: 4
-total road_4_junctions: 0
-total pavements: 36
-total traffic_lights: 4
-total people: 8
+total roads: 102
+total junctions: 26
+total road_4_junctions: 4
+total pavements: 108
+total traffic_lights: 0
+total people: 0
 total cars: 0
-total busses: 4
-
-Person with id 66 has spent 11.500044 Rs.
-Person with id 67 has spent 11.500044 Rs.
-Person with id 68 has spent 9.500036 Rs.
-Person with id 69 has spent 9.500036 Rs.
-Person with id 70 has spent 10.500040 Rs.
-Person with id 71 has spent 10.500040 Rs.
-Person with id 72 has spent 12.500048 Rs.
-Person with id 73 has spent 12.500048 Rs.
+total busses: 3
 
 
-Bus with id 62 has consumed 15.550006ltrs of fuel and has travelled 23.900011 miles.
-Bus with id 63 has consumed 14.150006ltrs of fuel and has travelled 28.700014 miles.
-Bus with id 64 has consumed 13.800007ltrs of fuel and has travelled 27.900013 miles.
-Bus with id 65 has consumed 14.850007ltrs of fuel and has travelled 30.300014 miles.
+
+Bus with id 271 has consumed 5.150002 ltrs of fuel and has travelled 10.300003 miles.
+Bus with id 272 has consumed 4.650000 ltrs of fuel and has travelled 9.299999 miles.
+Bus with id 273 has consumed 3.899997 ltrs of fuel and has travelled 7.799995 miles.
 
 
 Average fuel_consumed by all cars is 0.000000 ltrs.
-Average fuel_consumed by all busses is 14.550000 ltrs.Average money_spent by all people is 11.000000 Rs.
+Average fuel_consumed by all busses is 4.500000 ltrs.
+Average money_spent by all people is 0.000000 Rs.
 
 
 --------------------- REPORT------------------------
