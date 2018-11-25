@@ -89,8 +89,11 @@ struct DB_Connection
 	std::string get_basic_str(std::string init_str, int id, EntityType type, Angle angle, int occ_index);
 	std::string get_in_quotes(int value);
 
+	void generate_report();
+
 	void truncate_all();
 	inline void execute_stmt(std::string str);
+	inline sql::ResultSet* execute_query(std::string str);
 
 	void init();
 	void destroy();

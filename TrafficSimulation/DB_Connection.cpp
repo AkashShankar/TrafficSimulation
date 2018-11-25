@@ -2,6 +2,7 @@
 #include "DB_Connection.h"
 
 #include <jdbc/cppconn/statement.h>
+#include <fstream>
 #include "utilities.h"
 
 void DB_Connection::init()
@@ -386,6 +387,78 @@ void DB_Connection::truncate_all()
 	execute_stmt("alter table person_bus add foreign key(bus_id) references bus(id);");
 }
 
+void DB_Connection::generate_report()
+{
+	std::ofstream wr;
+	wr.open("report.txt");
+	if (!wr)
+		return;
+
+	int total_roads = 0;
+	int total_junctions = 0;
+	int total_road_4_junctions = 0;
+	int total_pavements = 0;
+	int total_traffic_lights = 0;
+	int total_people = 0;
+	int total_cars = 0;
+	int total_busses = 0;
+
+	res = execute_query("select count(*) from reg_en where type = 'road';");
+	res->next();
+	total_roads = res->getInt("count(*)");
+	delete res;
+
+	res = execute_query("select count(*) from reg_en where type = 'junction';");
+	res->next();
+	total_junctions = res->getInt("count(*)");
+	delete res;
+
+	res = execute_query("select count(*) from reg_en where type = 'road_4_junc';");
+	res->next();
+	total_road_4_junctions = res->getInt("count(*)");
+	delete res;
+
+	res = execute_query("select count(*) from reg_en where type = 'pavement';");
+	res->next();
+	total_pavements = res->getInt("count(*)");
+	delete res;
+
+	res = execute_query("select count(*) from trafficlight;");
+	res->next();
+	total_traffic_lights = res->getInt("count(*)");
+	delete res;
+
+	res = execute_query("select count(*) from person;");
+	res->next();
+	total_people = res->getInt("count(*)");
+	delete res;
+
+	res = execute_query("select count(*) from car;");
+	res->next();
+	total_cars = res->getInt("count(*)");
+	delete res;
+
+	res = execute_query("select count(*) from bus;");
+	res->next();
+	total_busses = res->getInt("count(*)");
+	delete res;
+
+	wr << "\n--------------------- REPORT------------------------\n\n";
+
+	wr << "total roads: " << total_roads << "\n";
+	wr << "total junctions: " << total_junctions << "\n";
+	wr << "total road_4_junctions: " << total_road_4_junctions << "\n";
+	wr << "total pavements: " << total_pavements << "\n";
+	wr << "total traffic_lights: " << total_traffic_lights << "\n";
+	wr << "total people: " << total_people << "\n";
+	wr << "total cars: " << total_cars << "\n";
+	wr << "total busses: " << total_busses << "\n";
+
+	wr << "\n--------------------- REPORT------------------------\n";
+
+	wr.close();
+}
+
 std::string DB_Connection::get_in_quotes(int value)
 {
 	std::string tmp = "'";
@@ -393,6 +466,15 @@ std::string DB_Connection::get_in_quotes(int value)
 	tmp += "'";
 
 	return tmp;
+}
+
+sql::ResultSet* DB_Connection::execute_query(std::string str)
+{
+	stmt = con->createStatement();
+	sql::ResultSet *tmp_res = stmt->executeQuery(str);
+	delete stmt;
+
+	return tmp_res;
 }
 
 void DB_Connection::execute_stmt(std::string str)

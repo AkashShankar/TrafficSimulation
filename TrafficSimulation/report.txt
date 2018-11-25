@@ -1,0 +1,12 @@
+
+--------------------- REPORT------------------------
+total roads: 18
+total junctions: 4
+total road_4_junctions: 0
+total pavements: 36
+total traffic_lights: 4
+total people: 8
+total cars: 0
+total busses: 4
+
+--------------------- REPORT------------------------

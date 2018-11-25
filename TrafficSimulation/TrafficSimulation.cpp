@@ -93,6 +93,8 @@ int main(int argc, char **argv)
 	// Working.
 	test.loop();
 
+	db_con.generate_report();
+
 	main_display.destroy();
 	editor.destroy();
 	v_grid.destroy();
